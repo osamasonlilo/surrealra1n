@@ -1,5 +1,5 @@
-v1.3 RC 4
+v1.3 RC 5
 
 RELEASE NOTES:
 
-filtering fix
+Linux fixes 
