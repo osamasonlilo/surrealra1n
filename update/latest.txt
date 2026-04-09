@@ -1,5 +1,5 @@
-v1.3 RC 6
+v1.3 RC 6 re-release
 
 RELEASE NOTES:
 
-macOS fixes
+macOS fixes, fix code overflow
