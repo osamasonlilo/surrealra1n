@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3 RC 6 re-release"
+CURRENT_VERSION="v1.3 RC 7"
 
 echo "surrealra1n - $CURRENT_VERSION"
 echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 15.8.5"
@@ -7,11 +7,11 @@ echo ""
 echo "Uses latest SHSH blobs (for tethered downgrades)"
 echo "iSuns9 fork of asr64_patcher is used for patching ASR"
 echo "Huge thanks to bodyc1m (discord username: cashcart1capone) for iPod touch 6 support, including the Arch Linux port they did."
+echo "Huge thanks to Mineek for openra1n."
 
 # Request sudo password upfront
 echo "Enter your user password when prompted to"
 sudo -v || exit 1
-
 
 DISTRO="Unsupported"
 ARCH="$(uname -m)"
@@ -28,7 +28,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
         echo
     elif [[ "$ARCH" == "x86_64" ]]; then
         echo "You are running surrealra1n on Intel macOS."
-        echo "This has NOT been tested thoroughly."
+        echo "Guide: https://github.com/pwnerblu/surrealra1n/wiki/Getting-started-with-surrealra1n-(macOS)"
         read -n 1 -s -r -p "Press any key to continue"
         dist=4
         echo
@@ -228,7 +228,7 @@ elif [[ $dist == 3 ]]; then
     curl -L -o bin/dsc64patcher https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Darwin/dsc64patcher
     curl -L -o bin/kerneldiff https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Darwin/kerneldiff
     curl -L -o bin/irecovery https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Darwin/irecovery
-    curl -L -o bin/iBoot64Patcher https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Darwin/iBoot64Patcher
+    curl -L -o bin/iBoot64Patcher https://github.com/edwin170/downr1n/raw/refs/heads/main/binaries/Darwin/iBoot64Patcher
     curl -L -o bin/Kernel64Patcher2 https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Darwin/Kernel64Patcher
     curl -L -o bin/hfsplus https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/hfsplus
     curl -L -o bin/zenity https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/zenity
@@ -256,6 +256,23 @@ elif [[ $dist == 3 ]]; then
     mv restored_external64_patcher ../bin/restored_external64_patcher
     cd ..
     rm -rf "restored_external64patcher"
+    # install libimg4 patcher for tethered restores to iOS 14/15, primarily convert to localboot
+    git clone https://github.com/iSuns9/libimg4_patcher --recursive
+    cd libimg4_patcher
+    make
+    mv libimg4_patcher ../bin/libimg4_patcher
+    cd ..
+    rm -rf "libimg4_patcher"
+    # the favor goes to openra1n by Mineek (pongoOS on unsigned bootchains), uses Nick Chan fork of openra1n
+    git clone https://github.com/asdfugil/openra1n -b ipad6
+    cd openra1n
+    curl -L -o Makefile https://github.com/mineek/openra1n/raw/refs/heads/sigcheck/Makefile
+    make 
+    mv openra1n ../bin/openra1n
+    cd ..
+    rm -rf "openra1n"
+    # palera1n macOS bin
+    curl -L -o bin/palera1n https://github.com/palera1n/palera1n/releases/download/v2.2.1/palera1n-macos-universal
     # install Kernel64Patcher for tether booting iOS 13+
     curl -L -o bin/Kernel64Patcher https://github.com/edwin170/downr1n/raw/refs/heads/main/binaries/Darwin/Kernel64Patcher
     curl -L -o bin/gaster https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/gaster
@@ -297,7 +314,7 @@ elif [[ $dist == 4 ]]; then
     curl -L -o bin/dsc64patcher https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Darwin/dsc64patcher
     curl -L -o bin/kerneldiff https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Darwin/kerneldiff
     curl -L -o bin/irecovery https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Darwin/irecovery
-    curl -L -o bin/iBoot64Patcher https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Darwin/iBoot64Patcher
+    curl -L -o bin/iBoot64Patcher https://github.com/edwin170/downr1n/raw/refs/heads/main/binaries/Darwin/iBoot64Patcher
     curl -L -o bin/Kernel64Patcher2 https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Darwin/Kernel64Patcher
     curl -L -o bin/hfsplus https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/hfsplus
     curl -L -o bin/zenity https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/zenity
@@ -307,6 +324,16 @@ elif [[ $dist == 4 ]]; then
     curl -L -o bin/ipatcher https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Darwin/iPatcher
     # install additional restored_external patcher (iPhone X only)
     curl -L -o bin/ipx_restored_patcher https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/ipx_restored_patcher
+    # palera1n macOS bin
+    curl -L -o bin/palera1n https://github.com/palera1n/palera1n/releases/download/v2.2.1/palera1n-macos-universal
+    # the favor goes to openra1n by Mineek (pongoOS on unsigned bootchains), uses Nick Chan fork of openra1n
+    git clone https://github.com/asdfugil/openra1n -b ipad6
+    cd openra1n
+    curl -L -o Makefile https://github.com/mineek/openra1n/raw/refs/heads/sigcheck/Makefile
+    make OBJCOPY=$(brew --prefix)/opt/binutils/bin/gobjcopy 
+    mv openra1n ../bin/openra1n
+    cd ..
+    rm -rf "openra1n"
     # restored patcher for seprmvr64 A8+ restores, my fork of mineek's restored patcher but repurposed
     curl -L -o main.c https://gist.githubusercontent.com/pwnerblu/d2adc5adee74a679704577ddd64508bf/raw/c8ca1a75847a16e6a1bbc20894750a20d3b33097/main.c
     gcc main.c -o bin/restoredpatcher
@@ -325,6 +352,13 @@ elif [[ $dist == 4 ]]; then
     mv restored_external64_patcher ../bin/restored_external64_patcher
     cd ..
     rm -rf "restored_external64patcher"
+    # install libimg4 patcher for tethered restores to iOS 14/15, primarily convert to localboot
+    git clone https://github.com/iSuns9/libimg4_patcher --recursive
+    cd libimg4_patcher
+    make
+    mv libimg4_patcher ../bin/libimg4_patcher
+    cd ..
+    rm -rf "libimg4_patcher"
     # install Kernel64Patcher for tether booting iOS 13+
     curl -L -o bin/Kernel64Patcher https://github.com/edwin170/downr1n/raw/refs/heads/main/binaries/Darwin/Kernel64Patcher
     curl -L -o bin/gaster https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/gaster
@@ -366,7 +400,7 @@ else
     curl -L -o bin/dsc64patcher https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Linux/dsc64patcher
     curl -L -o bin/kerneldiff https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Linux/kerneldiff
     curl -L -o bin/irecovery https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Linux/irecovery
-    curl -L -o bin/iBoot64Patcher https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Linux/iBoot64Patcher
+    curl -L -o bin/iBoot64Patcher https://github.com/edwin170/downr1n/raw/refs/heads/main/binaries/Linux/iBoot64Patcher
     curl -L -o bin/Kernel64Patcher2 https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Linux/Kernel64Patcher
     curl -L -o bin/hfsplus https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Linux/hfsplus
     # sshpass
@@ -394,6 +428,13 @@ else
     mv restored_external64_patcher ../bin/restored_external64_patcher
     cd ..
     rm -rf "restored_external64patcher"
+    # install libimg4 patcher for tethered restores to iOS 14/15, primarily convert to localboot
+    git clone https://github.com/iSuns9/libimg4_patcher --recursive
+    cd libimg4_patcher
+    make
+    mv libimg4_patcher ../bin/libimg4_patcher
+    cd ..
+    rm -rf "libimg4_patcher"
     # install Kernel64Patcher for tether booting iOS 13+
     curl -L -o bin/Kernel64Patcher https://github.com/edwin170/downr1n/raw/refs/heads/main/binaries/Linux/Kernel64Patcher
     curl -L -o bin/gaster https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/linux/x86_64/gaster
@@ -1790,7 +1831,25 @@ case "$1" in
                 fi
             fi
         fi
+        mkdir -p work
+        if [[ "$IDENTIFIER" == iPhone6,* ]] && [[ "$IOS_VERSION" == 10.1* || "$IOS_VERSION" == 10.2* ]]; then
+            cp tmp1/$KERNELCACHE10 work/kernel.orig 
+        else
+            cp tmp1/$KERNELCACHE work/kernel.orig 
+        fi  
         rm -rf "tmp2"
+        if [[ $IOS_VERSION == 15.* ]] && [[ $IDENTIFIER != iPad5* ]]; then
+            # prepare the localboot stuff, pre-patch kernel-cache
+            ./bin/img4 -i tmp1/$KERNELCACHE -o kernel.raw
+            ./bin/Kernel64Patcher kernel.raw kernel.patched -e -o -r -b15
+            ./bin/img4 -i kernel.patched -o tmp1/$KERNELCACHE -A -T krnl
+        fi
+        if [[ $IOS_VERSION == 14.* ]] && [[ $IDENTIFIER != iPad5* ]]; then
+            # prepare the localboot stuff, pre-patch kernel-cache
+            ./bin/img4 -i tmp1/$KERNELCACHE -o kernel.raw
+            ./bin/Kernel64Patcher kernel.raw kernel.patched -b
+            ./bin/img4 -i kernel.patched -o tmp1/$KERNELCACHE -A -T krnl
+        fi
         cd tmp1
         zip -0 -r ../custom.ipsw *
         cd ..
@@ -1799,13 +1858,7 @@ case "$1" in
         # determine restore ramdisk
         smallest_dmg=$(find_dmg tmp1 smallest)
         # determine update ramdisk (experimental tethered updates?)
-        update_dmg=$(find_dmg tmp1 largest 1073741824)
-        mkdir -p work
-        if [[ "$IDENTIFIER" == iPhone6,* ]] && [[ "$IOS_VERSION" == 10.1* || "$IOS_VERSION" == 10.2* ]]; then
-            cp tmp1/$KERNELCACHE10 work/kernel.orig 
-        else
-            cp tmp1/$KERNELCACHE work/kernel.orig 
-        fi     
+        update_dmg=$(find_dmg tmp1 largest 1073741824)   
         cd work
         echo "making patched restore chain"
         ../bin/img4 -i kernel.orig -o kernel.raw
@@ -1838,17 +1891,10 @@ case "$1" in
         else
             ./bin/hfsplus ramdisk.raw chmod 755 usr/sbin/asr 
         fi
-        if [[ $IOS_VERSION == 14.* || $IOS_VERSION == 15.* ]]; then
-            echo "patching restored_external"
+        if [[ $IDENTIFIER == iPhone10,3 || $IDENTIFIER == iPhone10,6 ]]; then
+            echo "Adding ipx patches"
             sudo ./bin/hfsplus ramdisk.raw extract usr/local/bin/restored_external 
-            if [[ $IDENTIFIER == iPhone10,3 || $IDENTIFIER == iPhone10,6 ]]; then
-                echo "[!] You are trying to restore an iPhone X to iOS $IOS_VERSION"
-                echo "An additional patch is required!"
-                ./bin/ipx_restored_patcher restored_external patched_external
-                ./bin/restored_external64_patcher patched_external patched_restored_external
-            else
-                ./bin/restored_external64_patcher restored_external patched_restored_external
-            fi
+            ./bin/ipx_restored_patcher restored_external patched_restored_external
             ./bin/ldid -e restored_external > ents.plist
             ./bin/ldid -Sents.plist patched_restored_external
             echo "replacing restored_external with patched restored_external"
@@ -1857,6 +1903,16 @@ case "$1" in
             ./bin/hfsplus ramdisk.raw add patched_restored_external usr/local/bin/restored_external
             sleep 4
             ./bin/hfsplus ramdisk.raw chmod 755 usr/local/bin/restored_external
+        fi
+        if [[ $IOS_VERSION == 14.* || $IOS_VERSION == 15.* ]]; then
+            # do libimg4 validation patch
+            echo "Doing validation patch so sealing system volume works"
+            sudo ./bin/hfsplus ramdisk.raw extract usr/lib/libimg4.dylib
+            ./bin/libimg4_patcher libimg4.dylib libimg4.patched
+            ./bin/ldid -Sents.plist libimg4.patched
+            sudo ./bin/hfsplus ramdisk.raw rm usr/lib/libimg4.dylib
+            sudo ./bin/hfsplus ramdisk.raw add libimg4.patched usr/lib/libimg4.dylib
+            sudo ./bin/hfsplus ramdisk.raw chmod 755 usr/lib/libimg4.dylib
         fi
         sleep 4
         echo "Packing patched Ramdisk as im4p"
@@ -1897,17 +1953,10 @@ case "$1" in
             ./bin/hfsplus ramdisk.raw chmod 755 usr/sbin/asr 
         fi
         # restored_external in update ramdisk is restored_update
-        if [[ $IOS_VERSION == 14.* || $IOS_VERSION == 15.* ]]; then
-            echo "patching restored_update"
+        if [[ $IDENTIFIER == iPhone10,3 || $IDENTIFIER == iPhone10,6 ]]; then
+            echo "patching restored_update, do ipx patches"
             ./bin/hfsplus ramdisk.raw extract usr/local/bin/restored_update 
-            if [[ $IDENTIFIER == iPhone10,3 || $IDENTIFIER == iPhone10,6 ]]; then
-                echo "[!] You are trying to restore an iPhone X to iOS $IOS_VERSION"
-                echo "An additional patch is required!"
-                ./bin/ipx_restored_patcher restored_update patched_external
-                ./bin/restored_external64_patcher patched_external patched_restored_external
-            else
-                ./bin/restored_external64_patcher restored_update patched_restored_external
-            fi
+            ./bin/ipx_restored_patcher restored_update patched_restored_external
             ./bin/ldid -e restored_update > ents.plist
             ./bin/ldid -Sents.plist patched_restored_external
             echo "replacing restored_update with patched restored_update"
@@ -1916,6 +1965,16 @@ case "$1" in
             ./bin/hfsplus ramdisk.raw add patched_restored_external usr/local/bin/restored_update
             sleep 4
             ./bin/hfsplus ramdisk.raw chmod 755 usr/local/bin/restored_update
+        fi
+        if [[ $IOS_VERSION == 14.* || $IOS_VERSION == 15.* ]]; then
+            # do libimg4 validation patch
+            echo "Doing validation patch so sealing system volume works"
+            sudo ./bin/hfsplus ramdisk.raw extract usr/lib/libimg4.dylib
+            ./bin/libimg4_patcher libimg4.dylib libimg4.patched
+            ./bin/ldid -Sents.plist libimg4.patched
+            sudo ./bin/hfsplus ramdisk.raw rm usr/lib/libimg4.dylib
+            sudo ./bin/hfsplus ramdisk.raw add libimg4.patched usr/lib/libimg4.dylib
+            sudo ./bin/hfsplus ramdisk.raw chmod 755 usr/lib/libimg4.dylib
         fi
         sleep 4
         echo "Packing patched Ramdisk as im4p"
@@ -2490,6 +2549,8 @@ case "$1" in
             ./bin/img4 -i to_patch/iBEC.im4p -o to_patch/iBEC.dec -k $IBEC_KEY
             if [[ "$IOS_VERSION" == 10.2* || "$IOS_VERSION" == 10.1* ]]; then
                 ./bin/kairos to_patch/iBSS.dec to_patch/iBSS.patched
+            elif [[ $IDENTIFIER == iPhone10* ]] && [[ $IOS_VERSION == 14.* || $IOS_VERSION == 15.* ]]; then
+                ./bin/iBoot64Patcher to_patch/iBSS.dec to_patch/iBSS.patched -b "-v wdt=-1" -l -n
             else
                 ./bin/iBoot64Patcher to_patch/iBSS.dec to_patch/iBSS.patched
             fi
@@ -2594,6 +2655,8 @@ case "$1" in
         fi
 
         # Placeholder for tethered boot command
+        normal_boot(){
+            
         echo "[*] Proceeding to tethered boot..."
         echo "first, your device needs to be in pwndfu mode. pwning with gaster"
         echo "[!] Linux has low success rate for the checkm8 exploit on A6-A7. If possible, you should connect your device to a Mac or iOS device and pwn with ipwnder"
@@ -2615,7 +2678,26 @@ case "$1" in
             echo "[!] You cannot send the bootchain in regular DFU"
             exit 1
         fi
+
+        }
+        if [[ $IOS_VERSION == 15.* ]]; then
+            read -p "Would you like to boot jailbroken with palera1n? (y/n): " palera1n_option
+        fi
+        if [[ $palera1n_option == y ]] && [[ $IOS_VERSION == 15.* ]]; then
+            ./bin/openra1n surrealra1n.sh # placeholder stuff
+        else
+            normal_boot
+        fi
         ./bin/irecovery -f "$BOOT_DIR/iBSS.img4"
+        if [[ $IDENTIFIER == iPhone10* ]] && [[ $palera1n_option != y ]]; then
+            echo "Your device should now boot."
+            exit 1
+        elif [[ $IDENTIFIER == iPhone10* ]] && [[ $palera1n_option == y ]]; then
+            sleep 3
+            ./bin/palera1n -l -V
+            echo "Your device should now boot."
+            exit 1
+        fi
         ./bin/irecovery -f "$BOOT_DIR/iBEC.img4"
         if [[ $IDENTIFIER == iPhone9* || $IDENTIFIER == iPhone10* || $IDENTIFIER == iPad7* ]]; then
             ./bin/irecovery -c go
