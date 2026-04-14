@@ -1,8 +1,8 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3 RC 7"
+CURRENT_VERSION="v1.3 RC 8"
 
 echo "surrealra1n - $CURRENT_VERSION"
-echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 15.8.5"
+echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1"
 echo ""
 echo "Uses latest SHSH blobs (for tethered downgrades)"
 echo "iSuns9 fork of asr64_patcher is used for patching ASR"
@@ -811,14 +811,6 @@ if [[ $IDENTIFIER == iPhone6,2 ]]; then
 fi
 
 mnifst="tmpmanifest/Manifest.plist"
-
-echo "Using:"
-echo "Kernelcache: $KERNELCACHE"
-echo "LLB for restore: $LLB"
-echo "iBoot for restore: $IBOOT"
-if [[ $IDENTIFIER == iPhone6* ]]; then
-   echo "SEP for iOS 10.x downgrades: $SEP"
-fi
 
 #!/bin/bash
 
@@ -1657,6 +1649,18 @@ case "$1" in
             echo "[!] PLEASE. PLEASE! DO NOT use this to bypass iCloud, only save activation tickets on a device you legally own"
             read -p "Press any key to continue"
         fi
+        if [[ $IDENTIFIER == iPhone10* ]] && [[ $IOS_VERSION == 16.6* ]]; then
+            echo "[!] iOS $LATEST_VERSION Cryptex is partially compatible"
+            echo "[!] You will have the following issues:"
+            echo "[!] iMessage/SMS won't work (there is a fix for that in the FutureRestore support Discord Server)"
+            echo "[!] VPN may not work, and potentially other issues"
+            read -p "Press enter to continue"
+        fi
+        if [[ $IDENTIFIER == iPhone10* ]] && [[ $IOS_VERSION == 16.0* || $IOS_VERSION == 16.1* || $IOS_VERSION == 16.2* || $IOS_VERSION == 16.3* || $IOS_VERSION == 16.4* || $IOS_VERSION == 16.5* ]]; then
+            echo "[!] Latest Cryptex is incompatible"
+            echo "You cannot restore or make a custom IPSW for this version."
+            exit 1
+        fi
         if [[ "$IDENTIFIER" == iPad4,5 || $IDENTIFIER == iPad4,4 ]] && [[ "$IOS_VERSION" == 11.2* || "$IOS_VERSION" == 11.1* || "$IOS_VERSION" == 11.0* ]]; then
             echo "[!] SEP is partially compatible"
             echo "[!] Restoring to iOS $IOS_VERSION will use iOS 10.3.3 SEP (because iOS 12 SEP is fully incompatible with 11.2.6 and below)"
@@ -1837,7 +1841,23 @@ case "$1" in
         else
             cp tmp1/$KERNELCACHE work/kernel.orig 
         fi  
+        if [[ $IDENTIFIER == iPhone10,3 || $IDENTIFIER == iPhone10,6 ]] && [[ $IOS_VERSION == 16.* ]]; then
+            # Use latest signed AOP on iOS 16.x restores
+            echo "Replacing AOP firmware"
+            mv tmp2/Firmware/AOP/aopfw-iphone10baop.im4p tmp1/Firmware/AOP/aopfw-iphone10baop.im4p
+        fi
+        if [[ $IDENTIFIER == iPhone10,1 || $IDENTIFIER == iPhone10,4 || $IDENTIFIER == iPhone10,2 || $IDENTIFIER == iPhone10,5 ]] && [[ $IOS_VERSION == 16.* ]]; then
+            # Use latest signed AOP on iOS 16.x restores
+            echo "Replacing AOP firmware"
+            mv tmp2/Firmware/AOP/aopfw-iphone10aop.im4p tmp1/Firmware/AOP/aopfw-iphone10aop.im4p
+        fi
         rm -rf "tmp2"
+        if [[ $IOS_VERSION == 16.* ]]; then
+            # prepare the localboot stuff, pre-patch kernel-cache
+            ./bin/img4 -i tmp1/$KERNELCACHE -o kernel.raw
+            ./bin/Kernel64Patcher kernel.raw kernel.patched -e -o -h
+            ./bin/img4 -i kernel.patched -o tmp1/$KERNELCACHE -A -T krnl
+        fi
         if [[ $IOS_VERSION == 15.* ]] && [[ $IDENTIFIER != iPad5* ]]; then
             # prepare the localboot stuff, pre-patch kernel-cache
             ./bin/img4 -i tmp1/$KERNELCACHE -o kernel.raw
@@ -1856,9 +1876,37 @@ case "$1" in
         mv custom.ipsw "$savedir/custom.ipsw"
         
         # determine restore ramdisk
-        smallest_dmg=$(find_dmg tmp1 smallest)
-        # determine update ramdisk (experimental tethered updates?)
-        update_dmg=$(find_dmg tmp1 largest 1073741824)   
+        if [[ $IDENTIFIER == iPhone10,3 || $IDENTIFIER == iPhone10,6 ]]; then
+            # mainly just 16.x stuff
+            restore_ramdisk_dmg="098-08863-001.dmg"
+            update_ramdisk_dmg="098-09105-001.dmg"
+            ipsw_url="https://updates.cdn-apple.com/2022FallFCS/fullrestores/012-65861/0A0400A0-2174-4D49-91B7-43FC9DE24272/iPhone10,3,iPhone10,6_16.0_20A362_Restore.ipsw"
+        fi
+        if [[ $IDENTIFIER == iPhone10,1 || $IDENTIFIER == iPhone10,4 ]]; then
+            # mainly just 16.x stuff
+            restore_ramdisk_dmg="098-08863-001.dmg"
+            update_ramdisk_dmg="098-09105-001.dmg"
+            ipsw_url="https://updates.cdn-apple.com/2022FallFCS/fullrestores/012-65931/BD2515B7-7802-4EB4-9377-98E3238EA5A8/iPhone_4.7_P3_16.0_20A362_Restore.ipsw"
+        fi
+        if [[ $IDENTIFIER == iPhone10,2 || $IDENTIFIER == iPhone10,5 ]]; then
+            # mainly just 16.x stuff
+            restore_ramdisk_dmg="098-08863-001.dmg"
+            update_ramdisk_dmg="098-09105-001.dmg"
+            ipsw_url="https://updates.cdn-apple.com/2022FallFCS/fullrestores/012-65568/0851247C-1B06-4CD4-B3C2-5A94026970B7/iPhone_5.5_P3_16.0_20A362_Restore.ipsw"
+        fi
+        if [[ $IOS_VERSION == 16.* ]]; then
+            # 16.0 ramdisk/kernel, stuff
+            smallest_dmg="$restore_ramdisk_dmg"
+            update_dmg="$update_ramdisk_dmg"
+            sudo ./bin/pzb -g $smallest_dmg $ipsw_url
+            sudo ./bin/pzb -g $update_dmg $ipsw_url
+            sudo ./bin/pzb -g $KERNELCACHE $ipsw_url
+            sudo mv $KERNELCACHE work/kernel.orig
+        else
+            smallest_dmg=$(find_dmg tmp1 smallest)
+            # determine update ramdisk (experimental tethered updates?)
+            update_dmg=$(find_dmg tmp1 largest 1073741824)   
+        fi
         cd work
         echo "making patched restore chain"
         ../bin/img4 -i kernel.orig -o kernel.raw
@@ -1904,7 +1952,7 @@ case "$1" in
             sleep 4
             ./bin/hfsplus ramdisk.raw chmod 755 usr/local/bin/restored_external
         fi
-        if [[ $IOS_VERSION == 14.* || $IOS_VERSION == 15.* ]]; then
+        if [[ $IOS_VERSION == 14.* || $IOS_VERSION == 15.* || $IOS_VERSION == 16.* ]]; then
             # do libimg4 validation patch
             echo "Doing validation patch so sealing system volume works"
             sudo ./bin/hfsplus ramdisk.raw extract usr/lib/libimg4.dylib
@@ -1966,7 +2014,7 @@ case "$1" in
             sleep 4
             ./bin/hfsplus ramdisk.raw chmod 755 usr/local/bin/restored_update
         fi
-        if [[ $IOS_VERSION == 14.* || $IOS_VERSION == 15.* ]]; then
+        if [[ $IOS_VERSION == 14.* || $IOS_VERSION == 15.* || $IOS_VERSION == 16.* ]]; then
             # do libimg4 validation patch
             echo "Doing validation patch so sealing system volume works"
             sudo ./bin/hfsplus ramdisk.raw extract usr/lib/libimg4.dylib
@@ -2549,7 +2597,7 @@ case "$1" in
             ./bin/img4 -i to_patch/iBEC.im4p -o to_patch/iBEC.dec -k $IBEC_KEY
             if [[ "$IOS_VERSION" == 10.2* || "$IOS_VERSION" == 10.1* ]]; then
                 ./bin/kairos to_patch/iBSS.dec to_patch/iBSS.patched
-            elif [[ $IDENTIFIER == iPhone10* ]] && [[ $IOS_VERSION == 14.* || $IOS_VERSION == 15.* ]]; then
+            elif [[ $IDENTIFIER == iPhone10* ]] && [[ $IOS_VERSION == 14.* || $IOS_VERSION == 15.* || $IOS_VERSION == 16.* ]]; then
                 ./bin/iBoot64Patcher to_patch/iBSS.dec to_patch/iBSS.patched -b "-v wdt=-1" -l -n
             else
                 ./bin/iBoot64Patcher to_patch/iBSS.dec to_patch/iBSS.patched
@@ -2614,15 +2662,6 @@ case "$1" in
             if [[ "$IOS_VERSION" == 12.* || $IOS_VERSION == 13.* || $IOS_VERSION == 14.* || $IOS_VERSION == 15.* ]]; then
                 ./bin/img4 -i to_patch/trustcache -o $BOOT_DIR/Trustcache.img4 -M "$im4m" -T rtsc
             fi
-            if [[ $IDENTIFIER == iPhone10,3 ]]; then
-                IPSW_PATH_2=$($zenity --file-selection --title="Select the iOS $LATEST_VERSION IPSW file")
-                unzip -j "$IPSW_PATH_2" "Firmware/all_flash/sep-firmware.d22.RELEASE.im4p" -d to_patch
-                ./bin/img4 -i "to_patch/sep-firmware.d22.RELEASE.im4p" -o "$BOOT_DIR/sep-firmware.img4" -T rsep -M $im4m
-            elif [[ $IDENTIFIER == iPhone10,6 ]]; then
-                IPSW_PATH_2=$($zenity --file-selection --title="Select the iOS $LATEST_VERSION IPSW file")
-                unzip -j "$IPSW_PATH_2" "Firmware/all_flash/sep-firmware.d221.RELEASE.im4p" -d to_patch
-                ./bin/img4 -i "to_patch/sep-firmware.d221.RELEASE.im4p" -o "$BOOT_DIR/sep-firmware.img4" -T rsep -M $im4m
-            fi
             if [[ $IDENTIFIER == iPhone10,3 || $IDENTIFIER == iPhone10,6 ]]; then
                 # camera fix
                 unzip -j "$IPSW_PATH" "Firmware/isp_bni/adc-nike-d22.im4p" -d to_patch
@@ -2680,10 +2719,10 @@ case "$1" in
         fi
 
         }
-        if [[ $IOS_VERSION == 15.* ]]; then
+        if [[ $IOS_VERSION == 15.* || $IOS_VERSION == 16.* ]] && [[ $dist == 3 || $dist == 4 ]]; then
             read -p "Would you like to boot jailbroken with palera1n? (y/n): " palera1n_option
         fi
-        if [[ $palera1n_option == y ]] && [[ $IOS_VERSION == 15.* ]]; then
+        if [[ $palera1n_option == y ]] && [[ $IOS_VERSION == 15.* || $IOS_VERSION == 16.* ]] && [[ $dist == 3 || $dist == 4 ]]; then
             ./bin/openra1n surrealra1n.sh # placeholder stuff
         else
             normal_boot
