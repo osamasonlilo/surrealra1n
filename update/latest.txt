@@ -1,6 +1,6 @@
-v1.3 RC 7
+v1.3 RC 8
 
 RELEASE NOTES:
 
-Update to localboot for iOS 14+ tethered downgrades (A11 only change for now)
-Also add openra1n integration to surrealra1n (integration so far macOS only for now)
+Adds iOS 16.6.x downgrade support for A11 devices
+iOS 16.0 - 16.5.1 is not supported at the moment because latest Cryptex is incompatible below 16.6
