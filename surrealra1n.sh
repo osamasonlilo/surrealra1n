@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3 RC 8"
+CURRENT_VERSION="v1.3 RC 9"
 
 echo "surrealra1n - $CURRENT_VERSION"
 echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1"
@@ -12,6 +12,8 @@ echo "Huge thanks to Mineek for openra1n."
 # Request sudo password upfront
 echo "Enter your user password when prompted to"
 sudo -v || exit 1
+
+dist=0
 
 DISTRO="Unsupported"
 ARCH="$(uname -m)"
@@ -40,8 +42,10 @@ elif [[ -r /etc/os-release ]]; then
 
     if [[ "$ID" == "arch" || "$ID_LIKE" == *arch* ]]; then
         DISTRO="Arch"
+        dist=2
     elif [[ "$ID" == "debian" || "$ID_LIKE" == *debian* ]]; then
         DISTRO="Debian"
+        dist=1
     fi
 fi
 
@@ -64,7 +68,7 @@ fi
 # Dependency check
 echo "Checking for required dependencies..."
 
-if [[ "$DISTRO" == "debian" ]]; then
+if [[ $dist == 1 ]]; then
     DEPENDENCIES=(libusb-1.0-0-dev libusbmuxd-tools libimobiledevice-utils usbmuxd libimobiledevice6 zenity git curl make gcc)
     MISSING_PACKAGES=()
 
@@ -82,7 +86,7 @@ if [[ "$DISTRO" == "debian" ]]; then
     else
         echo "All dependencies are installed." 
     fi
-elif [[ "$DISTRO" == "arch" ]]; then
+elif [[ $dist == 2 ]]; then
     DEPENDENCIES=(libusb libusbmuxd libimobiledevice usbmuxd zenity git curl make gcc base-devel)
     MISSING_PACKAGES=()
 
