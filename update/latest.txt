@@ -1,6 +1,5 @@
-v1.3 RC 8
+v1.3 RC 9
 
 RELEASE NOTES:
 
-Adds iOS 16.6.x downgrade support for A11 devices
-iOS 16.0 - 16.5.1 is not supported at the moment because latest Cryptex is incompatible below 16.6
+Proper dist stuff (Mainly a change for Linux) 
