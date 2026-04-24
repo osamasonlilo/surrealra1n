@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3 RC 9"
+CURRENT_VERSION="v1.3 RC 10"
 
 echo "surrealra1n - $CURRENT_VERSION"
 echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1"
@@ -2374,9 +2374,9 @@ case "$1" in
             exit 1
         fi
         if [[ $update_prompt == y || $update_prompt == Y ]]; then
-            INSTALL_TYPE=""
+            INSTALL_TYPE="--update"
         else
-            INSTALL_TYPE="-e"
+            INSTALL_TYPE=""
         fi
         # Check if IPSW is a make-custom-ipsw-2 ipsw or not.
         if [[ -f "$restoredir/kernel.im4p" && \
@@ -2384,8 +2384,23 @@ case "$1" in
               -f "$restoredir/ramdisk.im4p" ]]; then
             echo "This is not a make-custom-ipsw-2 ipsw. Will use futurerestore."
         else
-            echo "This is a make-custom-ipsw-2 IPSW. Running idevicerestore"
-            sudo LD_LIBRARY_PATH="lib" ./bin/idevicerestore $INSTALL_TYPE $restoredir/custom.ipsw -y
+            echo "This is a make-custom-ipsw-2 IPSW. Will do custom restore method"
+            sudo rm -rf "shsh"
+            echo "Fetching shsh blobs for iOS $LATEST_VERSION, this is just so it will restore. skip-blob flag is used"
+            mkdir -p shsh
+            APNONCE=$(./bin/irecovery -q | grep "^NONC:" | cut -d ':' -f2 | xargs)
+            sudo ./bin/tsschecker -d $IDENTIFIER -s -e $ECID -i $LATEST_VERSION --save-path shsh --apnonce $APNONCE
+
+            # Find the .shsh2 file in the shsh directory
+            shshpath2=$(find shsh -type f -name "*.shsh2" | head -n 1)
+            if [[ -z "$shshpath2" ]]; then
+                echo "[!] No .shsh2 blob found in shsh folder. Aborting."
+                exit 1
+            fi
+            echo "Immediately after idevicerestore sends the RestoreLogo (pay attention to TERMINAL output), disconnect the device, and press enter to continue"
+            sudo ./bin/idevicerestore $restoredir/custom.ipsw
+            read -p "Press enter to continue"
+            sudo ./futurerestore/futurerestore -t $shshpath2 $USE_BASEBAND --latest-sep --no-rsep $INSTALL_TYPE $restoredir/custom.ipsw
             echo "Restore has finished! Read above if there's any errors"
             exit 1
         fi
