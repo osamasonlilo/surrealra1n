@@ -1,5 +1,5 @@
-v1.3 RC 9
+v1.3 RC 10
 
 RELEASE NOTES:
 
-Proper dist stuff (Mainly a change for Linux) 
+Fix mini 4 iOS 14/15 restores via make-custom-ipsw-2 by updating restore method
