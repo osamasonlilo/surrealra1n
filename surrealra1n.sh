@@ -2398,7 +2398,7 @@ case "$1" in
                 exit 1
             fi
             echo "Immediately after idevicerestore sends the RestoreLogo (pay attention to TERMINAL output), disconnect the device, and press enter to continue"
-            sudo ./bin/idevicerestore $restoredir/custom.ipsw
+            sudo LD_LIBRARY_PATH="lib" ./bin/idevicerestore $restoredir/custom.ipsw
             read -p "Press enter to continue"
             sudo ./futurerestore/futurerestore -t $shshpath2 $USE_BASEBAND --latest-sep --no-rsep $INSTALL_TYPE $restoredir/custom.ipsw
             echo "Restore has finished! Read above if there's any errors"
