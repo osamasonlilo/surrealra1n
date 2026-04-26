@@ -2,4 +2,4 @@ v1.3 RC 11
 
 RELEASE NOTES:
 
-Update restored patcher for linux/macOS
+Update restored patcher for linux/macOS.
