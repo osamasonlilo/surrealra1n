@@ -1,5 +1,5 @@
-v1.3 RC 10
+v1.3 RC 11
 
 RELEASE NOTES:
 
-Fix mini 4 iOS 14/15 restores via make-custom-ipsw-2 by updating restore method
+Update restored patcher for linux/macOS
