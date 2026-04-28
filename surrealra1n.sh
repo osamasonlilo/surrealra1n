@@ -1687,12 +1687,12 @@ case "$1" in
             echo "[!] PLEASE. PLEASE! DO NOT use this to bypass iCloud, only save activation tickets on a device you legally own"
             read -p "Press any key to continue"
         fi
-        if [[ "$IDENTIFIER" == iPhone7* ]] && [[ "$IOS_VERSION" == 11.2* || "$IOS_VERSION" == 11.1* || "$IOS_VERSION" == 11.0* || "$IOS_VERSION" == 10.* || "$IOS_VERSION" == 9.* || "$IOS_VERSION" == 8.* ]]; then
+        if [[ "$IDENTIFIER" == iPhone7* ]] && [[ "$IOS_VERSION" == 11.2* || "$IOS_VERSION" == 11.1* || "$IOS_VERSION" == 11.0* || "$IOS_VERSION" == 10.0* || "$IOS_VERSION" == 9.* || "$IOS_VERSION" == 8.* ]]; then
             echo "[!] SEP is incompatible"
             echo "[!] You cannot restore to this version or make a custom IPSW for it"
             exit 1
         fi
-        if [[ $IDENTIFIER == iPod7* || $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 ]] && [[ $IOS_VERSION == 10.3* ]]; then
+        if [[ $IDENTIFIER == iPod7* || $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 || $IDENTIFIER == iPhone7* ]] && [[ $IOS_VERSION == 10.3* ]]; then
             echo "[!] SEP is compatible, but read the following:"
             echo "[!] This will use tvOS 10.2.2 SEP from the Apple TV HD."
             echo "[!] Some device features may or may not break, your mileage may vary."
