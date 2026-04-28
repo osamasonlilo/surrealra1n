@@ -1,5 +1,6 @@
-v1.3 RC 11
+v1.3 RC 12
 
 RELEASE NOTES:
 
-Update restored patcher for linux/macOS.
+Adds experimental iOS 10.3.3 downgrade support (WITH MOST SEP FUNCTIONS INTACT) for A8 (excluding A8X) devices
+Tested devices: iPod touch 6, iPad mini 4 (Wi-Fi)
