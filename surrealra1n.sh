@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3 RC 11"
+CURRENT_VERSION="v1.3 RC 12"
 
 echo "surrealra1n - $CURRENT_VERSION"
 echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1"
@@ -656,6 +656,8 @@ if [[ $IDENTIFIER == iPad4,4 || $IDENTIFIER == iPad4,5 ]]; then
         USE_BASEBAND="--latest-baseband"
     fi
     KERNELCACHE="kernelcache.release.ipad4b"
+    LLB="LLB.ipad4b.RELEASE.im4p"
+    IBOOT="iBoot.ipad4b.RELEASE.im4p"
 fi
 
 if [[ $IDENTIFIER == iPad4,6 ]]; then
@@ -715,6 +717,14 @@ fi
 
 # other stuff
 
+if [[ $IDENTIFIER == iPhone7,2 ]]; then
+    LLB="LLB.n61.RELEASE.im4p"
+    IBOOT="iBoot.n61.RELEASE.im4p"
+elif [[ $IDENTIFIER == iPhone7,1 ]]; then
+    LLB="LLB.n56.RELEASE.im4p"
+    IBOOT="iBoot.n56.RELEASE.im4p"
+fi
+
 if [[ $IDENTIFIER == iPhone6* ]]; then
     LATEST_VERSION="12.5.8"
     DOWNGRADE_RANGE="10.1 to 12.5.7"
@@ -735,10 +745,12 @@ elif [[ $IDENTIFIER == iPhone10,3 || $IDENTIFIER == iPhone10,6 ]]; then
 elif [[ $IDENTIFIER == iPod7,1 ]]; then
     # ipod touch 6 support, huge thanks to bodyc1m
     LATEST_VERSION="12.5.8"
-    DOWNGRADE_RANGE="11.3 to 12.5.7"
+    DOWNGRADE_RANGE="10.3 to 12.5.7"
     NOSEP_DOWNGRADE="8.4 to 9.3.5"
     KERNELCACHE="kernelcache.release.n102"
     KERNELCACHE10="kernelcache.release.n102"
+    LLB="LLB.n102.RELEASE.im4p"
+    IBOOT="iBoot.n102.RELEASE.im4p"
     IBSS="iBSS.n102.RELEASE.im4p"
     IBEC="iBEC.n102.RELEASE.im4p"
     DEVICETREE="DeviceTree.n102ap.im4p"
@@ -764,6 +776,8 @@ elif [[ $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 ]]; then
     IBSS="iBSS.ipad5.RELEASE.im4p"
     IBEC="iBEC.ipad5.RELEASE.im4p"
     KERNELCACHE="kernelcache.release.ipad5"
+    LLB="LLB.ipad5.RELEASE.im4p"
+    IBOOT="iBoot.ipad5.RELEASE.im4p"
 elif [[ $IDENTIFIER == iPad5,3 || $IDENTIFIER == iPad5,4 ]]; then
     LATEST_VERSION="15.8.7"
     DOWNGRADE_RANGE="11.3 to 15.8.5"
@@ -1678,8 +1692,13 @@ case "$1" in
             echo "[!] You cannot restore to this version or make a custom IPSW for it"
             exit 1
         fi
-
-        if [[ "$IDENTIFIER" == iPod7* ]] && [[ "$IOS_VERSION" == 11.2* || "$IOS_VERSION" == 11.1* || "$IOS_VERSION" == 11.0* || "$IOS_VERSION" == 10.* || "$IOS_VERSION" == 9.* || "$IOS_VERSION" == 8.* ]]; then
+        if [[ $IDENTIFIER == iPod7* || $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 ]] && [[ $IOS_VERSION == 10.3* ]]; then
+            echo "[!] SEP is compatible, but read the following:"
+            echo "[!] This will use tvOS 10.2.2 SEP from the Apple TV HD."
+            echo "[!] Some device features may or may not break, your mileage may vary."
+            read -p "Press enter to continue"
+        fi
+        if [[ "$IDENTIFIER" == iPod7* ]] && [[ "$IOS_VERSION" == 10.0* || "$IOS_VERSION" == 9.* || "$IOS_VERSION" == 8.* ]]; then
             echo "[!] SEP is incompatible"
             echo "[!] You cannot restore to this version or make a custom IPSW for it"
             exit 1
@@ -1720,7 +1739,7 @@ case "$1" in
             fi
             read -p "Press any key to continue"
         fi 
-        if [[ "$IDENTIFIER" == iPad5* ]] && [[ $IOS_VERSION == 11.2* || $IOS_VERSION == 11.1* || $IOS_VERSION == 11.0* || $IOS_VERSION == 10.* || $IOS_VERSION == 9.* || $IOS_VERSION == 8.* ]]; then
+        if [[ "$IDENTIFIER" == iPad5,3 || $IDENTIFIER == iPad5,4 ]] && [[ $IOS_VERSION == 11.2* || $IOS_VERSION == 11.1* || $IOS_VERSION == 11.0* || $IOS_VERSION == 10.* || $IOS_VERSION == 9.* || $IOS_VERSION == 8.* ]]; then
             echo "[!] SEP is incompatible"
             echo "[!] You cannot restore to this version or make a custom IPSW for it"
             exit 1
@@ -1915,13 +1934,17 @@ case "$1" in
         echo "making patched restore chain"
         ../bin/img4 -i kernel.orig -o kernel.raw
         ../bin/KPlooshFinder kernel.raw kernel.patched
+        if [[ $IDENTIFIER == iPad5* || $IDENTIFIER == iPhone7* ]] && [[ $IOS_VERSION == 10.* ]]; then
+            mv kernel.patched kernel.patch
+            ../bin/Kernel64Patcher2 kernel.patch kernel.patched -u 11 --skip-sks --skip-acm --skip-amfi
+        fi
         ../bin/kerneldiff kernel.raw kernel.patched kernel.bpatch
         ../bin/img4 -i kernel.orig -o kernel.im4p -T rkrn -P kernel.bpatch -J
         mv kernel.im4p ../$savedir/kernel.im4p
         # build ramdisk
         cd ..
         ./bin/img4 -i "$smallest_dmg" -o ramdisk.raw
-        if [[ "$IDENTIFIER" == iPhone6,* || $IDENTIFIER == iPod7* || $IDENTIFIER == iPad4* ]] && [[ "$IOS_VERSION" == 10.* || "$IOS_VERSION" == 11.0* || "$IOS_VERSION" == 11.1* || "$IOS_VERSION" == 11.2* ]]; then
+        if [[ "$IOS_VERSION" == 10.* || "$IOS_VERSION" == 11.0* || "$IOS_VERSION" == 11.1* || "$IOS_VERSION" == 11.2* ]]; then
             echo "growing ramdisk"
             ./bin/hfsplus ramdisk.raw grow 60000000
         else
@@ -1938,7 +1961,7 @@ case "$1" in
         sleep 4
         ./bin/hfsplus ramdisk.raw add patched_asr usr/sbin/asr
         sleep 4
-        if [[ "$IDENTIFIER" == iPhone6,* || $IDENTIFIER == iPad4* ]] && [[ "$IOS_VERSION" == 10.* ]]; then
+        if [[ "$IOS_VERSION" == 10.* ]]; then
             ./bin/hfsplus ramdisk.raw chmod 100755 usr/sbin/asr
         else
             ./bin/hfsplus ramdisk.raw chmod 755 usr/sbin/asr 
@@ -1982,7 +2005,7 @@ case "$1" in
         echo "building patched update ramdisk..."
         ./bin/img4 -i "$update_dmg" -o ramdisk.raw
         rm -rf "tmp1" 
-        if [[ "$IDENTIFIER" == iPhone6,* || $IDENTIFIER == iPod7* || $IDENTIFIER == iPad4* ]] && [[ "$IOS_VERSION" == 10.* || "$IOS_VERSION" == 11.0* || "$IOS_VERSION" == 11.1* || "$IOS_VERSION" == 11.2* ]]; then
+        if [[ "$IOS_VERSION" == 10.* || "$IOS_VERSION" == 11.0* || "$IOS_VERSION" == 11.1* || "$IOS_VERSION" == 11.2* ]]; then
             echo "growing ramdisk"
             ./bin/hfsplus ramdisk.raw grow 70000000
         else
@@ -1999,7 +2022,7 @@ case "$1" in
         sleep 4
         ./bin/hfsplus ramdisk.raw add patched_asr usr/sbin/asr
         sleep 4
-        if [[ "$IDENTIFIER" == iPhone6,* || $IDENTIFIER == iPad4* ]] && [[ "$IOS_VERSION" == 10.* ]]; then
+        if [[ "$IOS_VERSION" == 10.* ]]; then
             ./bin/hfsplus ramdisk.raw chmod 100755 usr/sbin/asr
         else
             ./bin/hfsplus ramdisk.raw chmod 755 usr/sbin/asr 
@@ -2412,13 +2435,43 @@ case "$1" in
             use_rsep="--no-rsep"
         fi
         echo "running futurerestore"
-        if [[ "$IDENTIFIER" == iPhone6,* || $IDENTIFIER == iPad4* ]] && [[ "$IOS_VERSION" == 10.* || "$IOS_VERSION" == 11.0* || "$IOS_VERSION" == 11.1* || "$IOS_VERSION" == 11.2* ]]; then
+        if [[ "$IDENTIFIER" == iPhone6,* || $IDENTIFIER == iPod7* || $IDENTIFIER == iPad4* || $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 ]] && [[ "$IOS_VERSION" == 10.* || "$IOS_VERSION" == 11.0* || "$IOS_VERSION" == 11.1* || "$IOS_VERSION" == 11.2* ]]; then
             echo "iOS 10 sep will be used"
             if [[ $IDENTIFIER == iPhone6* ]]; then
                 sudo ./bin/pzb -g Firmware/all_flash/$SEP http://appldnld.apple.com/ios10.3.3/091-23133-20170719-CA8E78E6-6977-11E7-968B-2B9100BA0AE3/iPhone_4.0_64bit_10.3.3_14G60_Restore.ipsw
             fi
             if [[ $IDENTIFIER == iPad4,4 || $IDENTIFIER == iPad4,5 ]]; then
                 sudo ./bin/pzb -g Firmware/all_flash/$SEP http://appldnld.apple.com/ios10.3.3/091-23378-20170719-CA983C78-6977-11E7-8922-3D9100BA0AE3/iPad_64bit_10.3.3_14G60_Restore.ipsw
+            fi
+            if [[ $IDENTIFIER == iPod7* ]]; then
+                # download tvOS SEP
+                SEP="sep-firmware.j42d.RELEASE.im4p"
+                sudo ./bin/pzb -g Firmware/all_flash/$SEP https://secure-appldnld.apple.com/tvos10.2.2/091-23452-20170720-5D53229C-6A56-11E7-8577-8B2C4A4DD6D5/AppleTV5,3_10.2.2_14W756_Restore.ipsw
+                mnifst="manifest/BuildManifest-iPod7,1.plist" # slightly modified BuildManifest from tvOS 10.2.2 to hack signed SEP for 10.3.x restores A8
+            fi
+            if [[ $IDENTIFIER == iPhone7,2 ]]; then
+                SEP="sep-firmware.j42d.RELEASE.im4p"
+                sudo ./bin/pzb -g Firmware/all_flash/$SEP https://secure-appldnld.apple.com/tvos10.2.2/091-23452-20170720-5D53229C-6A56-11E7-8577-8B2C4A4DD6D5/AppleTV5,3_10.2.2_14W756_Restore.ipsw
+                mnifst="manifest/BuildManifest-iPhone7,2.plist"
+                curl -L -o $mnifst https://github.com/pwnerblu/cursed-sep-resources/raw/refs/heads/main/BuildManifest-iPhone7,2.plist
+            fi
+            if [[ $IDENTIFIER == iPhone7,1 ]]; then
+                SEP="sep-firmware.j42d.RELEASE.im4p"
+                sudo ./bin/pzb -g Firmware/all_flash/$SEP https://secure-appldnld.apple.com/tvos10.2.2/091-23452-20170720-5D53229C-6A56-11E7-8577-8B2C4A4DD6D5/AppleTV5,3_10.2.2_14W756_Restore.ipsw
+                mnifst="manifest/BuildManifest-iPhone7,1.plist"
+                curl -L -o $mnifst https://github.com/pwnerblu/cursed-sep-resources/raw/refs/heads/main/BuildManifest-iPhone7,1.plist
+            fi
+            if [[ $IDENTIFIER == iPad5,1 ]]; then
+                SEP="sep-firmware.j42d.RELEASE.im4p"
+                sudo ./bin/pzb -g Firmware/all_flash/$SEP https://secure-appldnld.apple.com/tvos10.2.2/091-23452-20170720-5D53229C-6A56-11E7-8577-8B2C4A4DD6D5/AppleTV5,3_10.2.2_14W756_Restore.ipsw
+                mnifst="manifest/BuildManifest-iPad5,1.plist"
+                curl -L -o $mnifst https://github.com/pwnerblu/cursed-sep-resources/raw/refs/heads/main/BuildManifest-iPad5,1.plist
+            fi
+            if [[ $IDENTIFIER == iPad5,2 ]]; then
+                SEP="sep-firmware.j42d.RELEASE.im4p"
+                sudo ./bin/pzb -g Firmware/all_flash/$SEP https://secure-appldnld.apple.com/tvos10.2.2/091-23452-20170720-5D53229C-6A56-11E7-8577-8B2C4A4DD6D5/AppleTV5,3_10.2.2_14W756_Restore.ipsw
+                mnifst="manifest/BuildManifest-iPad5,2.plist"
+                curl -L -o $mnifst https://github.com/pwnerblu/cursed-sep-resources/raw/refs/heads/main/BuildManifest-iPad5,2.plist
             fi
             mkdir tmp
             mkdir tmp/Firmware
@@ -2653,11 +2706,17 @@ case "$1" in
                 ./bin/kerneldiff to_patch/kernel.raw to_patch/kernel.patched to_patch/kernel.bpatch
                 ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J     
             fi
-            if [[ $IOS_VERSION == 11.* ]] && [[ $IDENTIFIER == iPad5* ]]; then
+            if [[ $IOS_VERSION == 11.* || $IOS_VERSION == 10.* ]] && [[ $IDENTIFIER == iPad5* ]]; then
                 ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
                 ./bin/Kernel64Patcher2 to_patch/kernel.raw to_patch/kernel.patched -u 11 --skip-sks --skip-acm --skip-amfi
                 ./bin/kerneldiff to_patch/kernel.raw to_patch/kernel.patched to_patch/kernel.bpatch
                 ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J     
+            fi
+            if [[ $IDENTIFIER == iPhone7* ]] && [[ $IOS_VERSION == 10.* ]]; then
+                ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
+                ./bin/Kernel64Patcher2 to_patch/kernel.raw to_patch/kernel.patched -u 11 --skip-sks --skip-acm --skip-amfi
+                ./bin/kerneldiff to_patch/kernel.raw to_patch/kernel.patched to_patch/kernel.bpatch
+                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J   
             fi
             if [[ $IOS_VERSION == 15.* ]]; then
                 ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
