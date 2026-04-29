@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3 RC 12"
+CURRENT_VERSION="v1.3 RC 13"
 
 echo "surrealra1n - $CURRENT_VERSION"
 echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1"
@@ -1030,163 +1030,6 @@ case "$1" in
         echo "[!] 3. Encrypted Wi-Fi networks will not work. Use an open network instead."
         echo "[!] 4. You will have deep sleep issues, and POTENTIALLY other issues."
         read -p "Press any key to continue. Or press CTRL + C to cancel."
-        if [[ $IOS_VERSION == 9.* ]]; then
-            echo "[!] iOS $IOS_VERSION detected."
-            echo "[!] The restore ramdisk from this version might cause issues with restoring the device (especially if the mART is corrupt)"
-            echo "[!] It is STRONGLY recommended to use iOS 8.4 - 8.4.1 ramdisk option when restoring to this version."
-            if [[ $IDENTIFIER == iPod7* ]]; then
-                echo "Using 8.4.x ramdisk method regardless because of issues when restoring with 9 ramdisk."
-            elif [[ $FORCE_ACTIVATE == 1 ]]; then
-                echo "Using 8.4.x ramdisk method for this restore."
-            else
-                read -p "Use iOS 8.4.x ramdisk method? (y/n): " ios8ramdisk
-            fi
-            if [[ $ios8ramdisk == y || $ios8ramdisk == Y || $IDENTIFIER == iPod7* || $FORCE_ACTIVATE == 1 ]]; then
-                read -p "iOS version for ramdisk? " ramdiskversion
-                echo "Drag and drop the iOS $ramdiskversion IPSW file"
-                rdskipsw=$($zenity --file-selection --title="Select the iOS $ramdiskversion IPSW file")
-                echo "[*] Making custom IPSW..."
-                savedir="noseprestore/$IDENTIFIER/$IOS_VERSION"
-                mkdir -p "$savedir"
-                echo ""
-                unzip "$TARGET_IPSW" -d tmp1
-                unzip "$BASE_IPSW" -d tmp2
-                unzip "$rdskipsw" -d tmp3
-                # Read decryption keys
-                KEY_FILE="keys/$IDENTIFIER.txt"
-                if [[ ! -f "$KEY_FILE" ]]; then
-                    echo "[!] Key file $KEY_FILE not found. Aborting."
-                    exit 1
-                fi
-
-                # Extract iBSS and iBEC keys
-                IBSS_KEY=$(grep "ibss-$ramdiskversion:" "$KEY_FILE" | cut -d':' -f2 | xargs)
-                IBEC_KEY=$(grep "ibec-$ramdiskversion:" "$KEY_FILE" | cut -d':' -f2 | xargs)
-                DTRE_KEY=$(grep "dtre-$ramdiskversion:" "$KEY_FILE" | cut -d':' -f2 | xargs)
-                RDSK_KEY=$(grep "rdsk-$ramdiskversion:" "$KEY_FILE" | cut -d':' -f2 | xargs)
-                KRNL_KEY=$(grep "krnl-$ramdiskversion:" "$KEY_FILE" | cut -d':' -f2 | xargs)
-                ROOT_KEY=$(grep "fstm-$IOS_VERSION:" "$KEY_FILE" | cut -d':' -f2 | xargs)
-
-                if [[ -z "$IBSS_KEY" || -z "$IBEC_KEY" ]]; then
-                    echo "[!] Missing iBSS or iBEC key for iOS $IOS_VERSION in $KEY_FILE. Aborting."
-                    exit 1
-                fi
-
-                echo "[*] Found keys:"
-                echo "    iBSS Key: $IBSS_KEY"
-                echo "    iBEC Key: $IBEC_KEY"
-
-                smallest_dmg=$(find_dmg tmp3 smallest)
-                smallest12_dmg=$(find_dmg tmp2 smallest)
-                rootfs_dmg=$(find_dmg tmp1 largest)
-                rootfs12_dmg=$(find_dmg tmp2 largest)
-
-                mkdir work
-                rm -rf "$rootfs12_dmg"
-                ./bin/dmg extract "$rootfs_dmg" "tmp1/rootfs.raw" -k $ROOT_KEY
-                if [[ $FORCE_ACTIVATE == 1 ]]; then
-                    echo "Preparing activation files..."
-                    sudo cp activation_records/$CACHED_SERIAL/activation_record.plist activation.plist
-                    sudo cp activation_records/$CACHED_SERIAL/IC-Info.sisv IC-Info.sisv
-                    sudo cp activation_records/$CACHED_SERIAL/com.apple.commcenter.device_specific_nobackup.plist com.apple.commcenter.device_specific_nobackup.plist
-                    echo "Making dirs..."
-                    ./bin/hfsplus "tmp1/rootfs.raw" mkdir private/var/mobile/Library/mad/activation_records
-                    ./bin/hfsplus "tmp1/rootfs.raw" mkdir private/var/mobile/Library/FairPlay/iTunes_Control/iTunes
-                    ./bin/hfsplus "tmp1/rootfs.raw" mkdir private/var/wireless
-                    ./bin/hfsplus "tmp1/rootfs.raw" mkdir private/var/wireless/Library
-                    ./bin/hfsplus "tmp1/rootfs.raw" mkdir private/var/wireless/Library/Preferences
-                    echo "Injecting activation files into rootfs..."
-                    ./bin/hfsplus "tmp1/rootfs.raw" add activation.plist private/var/mobile/Library/mad/activation_records/activation_record.plist
-                    ./bin/hfsplus "tmp1/rootfs.raw" add IC-Info.sisv private/var/mobile/Library/FairPlay/iTunes_Control/iTunes/IC-Info.sisv
-                    sudo ./bin/hfsplus "tmp1/rootfs.raw" add com.apple.commcenter.device_specific_nobackup.plist private/var/wireless/Library/Preferences/com.apple.commcenter.device_specific_nobackup.plist
-                    echo "Setting permissions..."
-                    ./bin/hfsplus "tmp1/rootfs.raw" chmod 666 private/var/mobile/Library/mad/activation_records/activation_record.plist
-                    ./bin/hfsplus "tmp1/rootfs.raw" chmod 664 private/var/mobile/Library/FairPlay/iTunes_Control/iTunes/IC-Info.sisv
-                    ./bin/hfsplus "tmp1/rootfs.raw" chmod 600 private/var/wireless/Library/Preferences/com.apple.commcenter.device_specific_nobackup.plist
-                    echo "Cleaning up..."
-                    sudo rm -rf activation.plist
-                    sudo rm -rf IC-Info.sisv
-                fi
-                ./bin/dmg build "tmp1/rootfs.raw" "$rootfs12_dmg"
-                ./bin/img4 -i "$smallest_dmg" -o "work/ramdisk.raw" -k $RDSK_KEY 
-                ./bin/hfsplus "work/ramdisk.raw" grow 30000000
-                ./bin/hfsplus "work/ramdisk.raw" extract usr/sbin/asr
-                ./bin/asr64_patcher asr asr_patched
-                ./bin/ldid -e asr > ents.plist
-                ./bin/ldid -Sents.plist asr_patched
-                ./bin/hfsplus "work/ramdisk.raw" rm usr/sbin/asr
-                ./bin/hfsplus "work/ramdisk.raw" add asr_patched usr/sbin/asr
-                ./bin/hfsplus "work/ramdisk.raw" chmod 100755 usr/sbin/asr
-                if [[ $IDENTIFIER == iPod7* ]]; then
-                    ./bin/hfsplus "work/ramdisk.raw" extract usr/local/bin/restored_external
-                    ./bin/restoredpatcher restored_external restored_patch -b
-                    ./bin/ldid -e restored_external > ents.plist
-                    ./bin/ldid -Sents.plist restored_patch
-                    ./bin/hfsplus "work/ramdisk.raw" rm usr/local/bin/restored_external
-                    ./bin/hfsplus "work/ramdisk.raw" add restored_patch usr/local/bin/restored_external
-                    ./bin/hfsplus "work/ramdisk.raw" chmod 100755 usr/local/bin/restored_external
-                fi
-                ./bin/img4 -i "work/ramdisk.raw" -o "$smallest12_dmg" -A -T rdsk
-                rm -rf "asr asr_patched ents.plist"
-                ./bin/img4 -i "tmp3/Firmware/all_flash/$ALLFLASH/$DEVICETREE" -o "work/dtre.raw" -k $DTRE_KEY
-
-                # patch content-protect string devicetree, to prevent restore freezes at keybag step
-                perl -pi -e 's/content-protect/content-protecV/g' work/dtre.raw 
-
-                ./bin/img4 -i "work/dtre.raw" -o "tmp2/Firmware/all_flash/$DEVICETREE" -A -T rdtr
-
-                if [[ $ramdiskversion != 7.* ]]; then
-                    mv "tmp3/Firmware/dfu/$IBSS10" "tmp3/Firmware/dfu/$IBSS7"
-                    mv "tmp3/Firmware/dfu/$IBEC10" "tmp3/Firmware/dfu/$IBEC7"
-                fi
-
-                ./bin/img4 -i "tmp3/Firmware/dfu/$IBSS7" -o "work/iBSS.dec" -k "$IBSS_KEY"
-                ./bin/img4 -i "tmp3/Firmware/dfu/$IBEC7" -o "work/iBEC.dec" -k "$IBEC_KEY"
-
-                if [[ $ramdiskversion == 7.* || $ramdiskversion == 8.* ]]; then
-                    ./bin/ipatcher work/iBSS.dec work/iBSS.patched
-                    ./bin/ipatcher work/iBEC.dec work/iBEC.patched -b "rd=md0 debug=0x2014e -v wdt=-1 nand-enable-reformat=1 -restore amfi=0xff cs_enforcement_disable=1"
-                else
-                    ./bin/kairos work/iBSS.dec work/iBSS.patched
-                    ./bin/kairos work/iBEC.dec work/iBEC.patched -b "rd=md0 debug=0x2014e -v wdt=-1 nand-enable-reformat=1 -restore amfi=0xff cs_enforcement_disable=1"
-                fi
-
-                ./bin/img4 -i "work/iBSS.patched" -o "tmp2/Firmware/dfu/$IBSS" -A -T ibss   
-                ./bin/img4 -i "work/iBEC.patched" -o "tmp2/Firmware/dfu/$IBEC" -A -T ibec 
-
-                ./bin/img4 -i "tmp3/$KERNELCACHE10" -o "work/kcache.raw" -k $KRNL_KEY  
-                ./bin/img4 -i "tmp3/$KERNELCACHE10" -o "work/kcache.im4p" -k $KRNL_KEY -D
-
-                if [[ $ramdiskversion == 7.* ]]; then
-                    ./bin/Kernel64Patcher2 "work/kcache.raw" "work/kcache.patched" -u 7 -m 7 -e 7 -f 7 -k
-                elif [[ $ramdiskversion == 8.* ]]; then
-                    ./bin/Kernel64Patcher2 "work/kcache.raw" "work/kcache.patched" -u 8 -t -p -e 8 -f 8 -a -m 8 -g -s -d
-                else
-                    ./bin/Kernel64Patcher2 "work/kcache.raw" "work/kcache.patched" -u 9 -f 9 -k
-                fi     
-
-                ./bin/kerneldiff "work/kcache.raw" "work/kcache.patched" "work/kcache.bpatch"
-
-                # wrap kcache into im4p
-                ./bin/img4 -i "work/kcache.im4p" -o "tmp2/$KERNELCACHE" -T rkrn -P "work/kcache.bpatch" -J
-
-                echo "Patching complete!"
-                rm -rf "work"
-                rm -rf "tmp1"
-                rm -rf "tmp3"
-
-                cd tmp2
-                zip -0 -r ../$savedir/custom.ipsw *
-                cd ..
-
-                rm -rf "tmp2"
-                echo "Custom IPSW is created! You can restore with: ./surrealra1n.sh --seprmvr64-restore $IOS_VERSION"
-                exit 0
-            else
-                echo "Continuing without iOS 8.4.x ramdisk method"
-                sleep 4
-            fi
-        fi
         echo "[*] Making custom IPSW..."
         savedir="noseprestore/$IDENTIFIER/$IOS_VERSION"
         mkdir -p "$savedir"
@@ -1345,7 +1188,7 @@ case "$1" in
                 ./bin/hfsplus "tmp1/rootfs.raw" untar $untether_tar
             fi
             ./bin/dmg build "tmp1/rootfs.raw" "$rootfs12_dmg"
-        elif [[ $IOS_VERSION == 9.* ]] && [[ $IDENTIFIER == iPod7* ]]; then
+        elif [[ $IOS_VERSION == 9.* ]] && [[ $IDENTIFIER == iPod7* || $IDENTIFIER == iPhone7* || $FORCE_ACTIVATE == 1 ]]; then
             # patch asr, and if A8, patch restored_external FDR step
             ./bin/img4 -i "$smallest_dmg" -o "work/ramdisk.raw" -k $RDSK_KEY 
             ./bin/hfsplus "work/ramdisk.raw" grow 40000000
@@ -1356,7 +1199,7 @@ case "$1" in
             ./bin/hfsplus "work/ramdisk.raw" rm usr/sbin/asr
             ./bin/hfsplus "work/ramdisk.raw" add asr_patch usr/sbin/asr
             ./bin/hfsplus "work/ramdisk.raw" chmod 100755 usr/sbin/asr
-            if [[ $IDENTIFIER == iPod7* ]]; then
+            if [[ $IDENTIFIER == iPod7* || $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5* ]]; then
                 ./bin/hfsplus "work/ramdisk.raw" extract usr/local/bin/restored_external
                 ./bin/restoredpatcher restored_external restored_patch -b
                 ./bin/ldid -e restored_external > ents.plist
@@ -1366,6 +1209,33 @@ case "$1" in
                 ./bin/hfsplus "work/ramdisk.raw" chmod 100755 usr/local/bin/restored_external
                 ./bin/img4 -i "work/ramdisk.raw" -o "$smallest12_dmg" -A -T rdsk
             fi
+            if [[ $FORCE_ACTIVATE == 1 ]]; then
+                echo "Preparing activation files..."
+                sudo cp activation_records/$CACHED_SERIAL/activation_record.plist activation.plist
+                sudo cp activation_records/$CACHED_SERIAL/IC-Info.sisv IC-Info.sisv
+                sudo cp activation_records/$CACHED_SERIAL/com.apple.commcenter.device_specific_nobackup.plist com.apple.commcenter.device_specific_nobackup.plist
+                echo "Making dirs..."
+                ./bin/hfsplus "tmp1/rootfs.raw" mkdir private/var/root/Library/Lockdown/activation_records
+                ./bin/hfsplus "tmp1/rootfs.raw" mkdir private/var/mobile/Library/mad/activation_records
+                ./bin/hfsplus "tmp1/rootfs.raw" mkdir private/var/mobile/Library/FairPlay/iTunes_Control/iTunes
+                ./bin/hfsplus "tmp1/rootfs.raw" mkdir private/var/wireless
+                ./bin/hfsplus "tmp1/rootfs.raw" mkdir private/var/wireless/Library
+                ./bin/hfsplus "tmp1/rootfs.raw" mkdir private/var/wireless/Library/Preferences
+                echo "Injecting activation files into rootfs..."
+                ./bin/hfsplus "tmp1/rootfs.raw" add activation.plist private/var/root/Library/Lockdown/activation_records/activation_record.plist
+                ./bin/hfsplus "tmp1/rootfs.raw" add activation.plist private/var/mobile/Library/mad/activation_records/activation_record.plist
+                ./bin/hfsplus "tmp1/rootfs.raw" add IC-Info.sisv private/var/mobile/Library/FairPlay/iTunes_Control/iTunes/IC-Info.sisv
+                sudo ./bin/hfsplus "tmp1/rootfs.raw" add com.apple.commcenter.device_specific_nobackup.plist private/var/wireless/Library/Preferences/com.apple.commcenter.device_specific_nobackup.plist
+                echo "Setting permissions..."
+                ./bin/hfsplus "tmp1/rootfs.raw" chmod 666 private/var/root/Library/Lockdown/activation_records/activation_record.plist
+                ./bin/hfsplus "tmp1/rootfs.raw" chmod 666 private/var/mobile/Library/mad/activation_records/activation_record.plist
+                ./bin/hfsplus "tmp1/rootfs.raw" chmod 664 private/var/mobile/Library/FairPlay/iTunes_Control/iTunes/IC-Info.sisv
+                ./bin/hfsplus "tmp1/rootfs.raw" chmod 600 private/var/wireless/Library/Preferences/com.apple.commcenter.device_specific_nobackup.plist
+                echo "Cleaning up..."
+                sudo rm -rf activation.plist
+                sudo rm -rf IC-Info.sisv
+            fi
+            ./bin/img4 -i "work/ramdisk.raw" -o "$smallest12_dmg" -A -T rdsk
             ./bin/dmg extract "$rootfs_dmg" "tmp1/rootfs.raw" -k $ROOT_KEY
             ./bin/dmg build "tmp1/rootfs.raw" "$rootfs12_dmg"
         else
@@ -1397,7 +1267,7 @@ case "$1" in
         elif [[ $IOS_VERSION == 8.* ]]; then
             ./bin/Kernel64Patcher2 "work/kcache.raw" "work/kcache.patched" -u 8 -t -p -e 8 -f 8 -a -m 8 -g -s -d
         else
-            ./bin/Kernel64Patcher2 "work/kcache.raw" "work/kcache.patched" -u 9 -f 9 -k
+            ./bin/Kernel64Patcher2 "work/kcache.raw" "work/kcache.patched" -u 9 -f 9 -k -v
         fi     
         ./bin/kerneldiff "work/kcache.raw" "work/kcache.patched" "work/kcache.bpatch"
         # wrap kcache into im4p
