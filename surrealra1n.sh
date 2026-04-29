@@ -1188,7 +1188,7 @@ case "$1" in
                 ./bin/hfsplus "tmp1/rootfs.raw" untar $untether_tar
             fi
             ./bin/dmg build "tmp1/rootfs.raw" "$rootfs12_dmg"
-        elif [[ $IOS_VERSION == 9.* ]] && [[ $IDENTIFIER == iPod7* || $IDENTIFIER == iPhone7* || $FORCE_ACTIVATE == 1 ]]; then
+        elif [[ $IOS_VERSION == 9.* ]] && [[ $IDENTIFIER == iPod7* || $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5* || $FORCE_ACTIVATE == 1 ]]; then
             # patch asr, and if A8, patch restored_external FDR step
             ./bin/img4 -i "$smallest_dmg" -o "work/ramdisk.raw" -k $RDSK_KEY 
             ./bin/hfsplus "work/ramdisk.raw" grow 40000000
