@@ -1,6 +1,5 @@
-v1.3 RC 12
+v1.3 RC 13
 
 RELEASE NOTES:
 
-Adds experimental iOS 10.3.3 downgrade support (WITH MOST SEP FUNCTIONS INTACT) for A8 (excluding A8X) devices
-Tested devices: iPod touch 6, iPad mini 4 (Wi-Fi)
+Deprecates iOS 8.4.x ramdisk option 
