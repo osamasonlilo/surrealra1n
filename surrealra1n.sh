@@ -1209,6 +1209,8 @@ case "$1" in
                 ./bin/hfsplus "work/ramdisk.raw" chmod 100755 usr/local/bin/restored_external
                 ./bin/img4 -i "work/ramdisk.raw" -o "$smallest12_dmg" -A -T rdsk
             fi
+            ./bin/img4 -i "work/ramdisk.raw" -o "$smallest12_dmg" -A -T rdsk
+            ./bin/dmg extract "$rootfs_dmg" "tmp1/rootfs.raw" -k $ROOT_KEY
             if [[ $FORCE_ACTIVATE == 1 ]]; then
                 echo "Preparing activation files..."
                 sudo cp activation_records/$CACHED_SERIAL/activation_record.plist activation.plist
@@ -1235,8 +1237,6 @@ case "$1" in
                 sudo rm -rf activation.plist
                 sudo rm -rf IC-Info.sisv
             fi
-            ./bin/img4 -i "work/ramdisk.raw" -o "$smallest12_dmg" -A -T rdsk
-            ./bin/dmg extract "$rootfs_dmg" "tmp1/rootfs.raw" -k $ROOT_KEY
             ./bin/dmg build "tmp1/rootfs.raw" "$rootfs12_dmg"
         else
             mv "$rootfs_dmg" "$rootfs12_dmg"
