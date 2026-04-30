@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3 RC 13"
+CURRENT_VERSION="v1.3 RC 14"
 
 echo "surrealra1n - $CURRENT_VERSION"
 echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1"
@@ -69,7 +69,7 @@ fi
 echo "Checking for required dependencies..."
 
 if [[ $dist == 1 ]]; then
-    DEPENDENCIES=(libusb-1.0-0-dev libusbmuxd-tools libimobiledevice-utils usbmuxd libimobiledevice6 zenity git curl make gcc)
+    DEPENDENCIES=(libusb-1.0-0-dev libusbmuxd-tools libimobiledevice-utils usbmuxd libimobiledevice zenity git curl make gcc)
     MISSING_PACKAGES=()
 
     for pkg in "${DEPENDENCIES[@]}"; do
