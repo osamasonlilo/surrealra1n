@@ -1,5 +1,5 @@
-v1.3 RC 13
+v1.3 RC 14
 
 RELEASE NOTES:
 
-Deprecates iOS 8.4.x ramdisk option 
+Dependency fixes
