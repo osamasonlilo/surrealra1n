@@ -10,6 +10,8 @@ iPod touch 6:
 
 10.0 - 11.2.6 (no support)
 
+10.3.x (experimental support)
+
 11.3 - 12.5.7 (supported with SEP)
 
 iPhone 6 and 6 Plus:
