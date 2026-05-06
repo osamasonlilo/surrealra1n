@@ -1,4 +1,4 @@
-v1.3 final (dev branch)
+v1.3
 
 RELEASE NOTES:
 
