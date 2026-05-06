@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3 final (dev branch)"
+CURRENT_VERSION="v1.3"
 
 echo "surrealra1n - $CURRENT_VERSION"
 echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1"
@@ -24,13 +24,13 @@ if [[ "$(uname)" == "Darwin" ]]; then
 
     if [[ "$ARCH" == "arm64" ]]; then
         echo "You are running surrealra1n on an Apple Silicon Mac."
-        echo "Guide: https://github.com/pwnerblu/surrealra1n/wiki/Getting-started-with-surrealra1n-(macOS)"
+        echo "Please read the following guide before continuing: https://github.com/pwnerblu/surrealra1n/wiki/Getting-started-with-surrealra1n-(macOS)"
         read -n 1 -s -r -p "Press any key to continue"
         dist=3
         echo
     elif [[ "$ARCH" == "x86_64" ]]; then
         echo "You are running surrealra1n on Intel macOS."
-        echo "Guide: https://github.com/pwnerblu/surrealra1n/wiki/Getting-started-with-surrealra1n-(macOS)"
+        echo "Please read the following guide before continuing: https://github.com/pwnerblu/surrealra1n/wiki/Getting-started-with-surrealra1n-(macOS)"
         read -n 1 -s -r -p "Press any key to continue"
         dist=4
         echo
@@ -146,7 +146,7 @@ find_dmg() {
 
 echo "Checking for updates..."
 rm -rf update/latest.txt
-curl -L -o update/latest.txt https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt
+curl -L -o update/latest.txt https://github.com/pwnerblu/surrealra1n/raw/refs/heads/main/update/latest.txt
 LATEST_VERSION=$(head -n 1 "update/latest.txt" | tr -d '\r\n')
 RELEASE_NOTES=$(awk '/^RELEASE NOTES:/{flag=1; next} flag' "update/latest.txt")
 
@@ -163,12 +163,12 @@ if [[ $LATEST_VERSION != $CURRENT_VERSION ]]; then
         rm -rf futurerestore
         rm -rf "keys"
         rm -rf "manifest"
-        curl -L -o updatefiles/surrealra1n.sh https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/surrealra1n.sh
+        curl -L -o updatefiles/surrealra1n.sh https://github.com/pwnerblu/surrealra1n/raw/refs/heads/main/surrealra1n.sh
         rm -rf surrealra1n.sh
         mv updatefiles/surrealra1n.sh surrealra1n.sh
         chmod +x surrealra1n.sh
         cd updatefiles
-        git clone --branch development https://github.com/pwnerblu/surrealra1n --recursive
+        git clone --branch main https://github.com/pwnerblu/surrealra1n --recursive
         mv surrealra1n/keys keys
         mv surrealra1n/manifest manifest
         cd ..
