@@ -16,6 +16,8 @@ iPhone 6 and 6 Plus:
 
 8.0 - 11.2.6 (no support, except for 8.4.1 seprmvr64)
 
+10.3.x (experimental support)
+
 11.3 - 12.5.7 (supported with SEP)
 
 iPad Air 2:
@@ -28,7 +30,9 @@ iPad mini 4:
 
 9.0 - 13.3.1 (no support)
 
-13.4 - 15.8.5 (supported with SEP, 13 will not have Touch ID though)
+10.3.x (experimental support)
+
+11.3 - 15.8.5 (supported with SEP, 13 will not have Touch ID though)
 
 iPhone 5S:
 
