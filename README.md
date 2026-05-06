@@ -58,6 +58,8 @@ iPhone 8 Plus and iPhone X:
 
 14.3 - 15.6.1 (supported with SEP, broken features)
 
+# Experimental devices (untested, please open an issue if there's any problems with iPad mini 2)
+
 iPad mini 2 (excluding iPad4,6):
 
 7.0.3 - 10.2.1 (no support)
