@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3 RC 14"
+CURRENT_VERSION="v1.3 final (dev branch)"
 
 echo "surrealra1n - $CURRENT_VERSION"
 echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1"
@@ -7,7 +7,7 @@ echo ""
 echo "Uses latest SHSH blobs (for tethered downgrades)"
 echo "iSuns9 fork of asr64_patcher is used for patching ASR"
 echo "Huge thanks to bodyc1m (discord username: cashcart1capone) for iPod touch 6 support, including the Arch Linux port they did."
-echo "Huge thanks to Mineek for openra1n."
+echo "Huge thanks to Mineek for openra1n and seprmvr64."
 
 # Request sudo password upfront
 echo "Enter your user password when prompted to"
@@ -69,7 +69,7 @@ fi
 echo "Checking for required dependencies..."
 
 if [[ $dist == 1 ]]; then
-    DEPENDENCIES=(libusb-1.0-0-dev libusbmuxd-tools libimobiledevice-utils usbmuxd libimobiledevice zenity git curl make gcc)
+    DEPENDENCIES=(libusb-1.0-0-dev libusbmuxd-tools libimobiledevice-utils usbmuxd zenity git curl make gcc)
     MISSING_PACKAGES=()
 
     for pkg in "${DEPENDENCIES[@]}"; do
@@ -788,7 +788,7 @@ elif [[ $IDENTIFIER == iPad5,3 || $IDENTIFIER == iPad5,4 ]]; then
 elif [[ $IDENTIFIER == iPad4,4 || $IDENTIFIER == iPad4,5 || $IDENTIFIER == iPad4,6 ]]; then
     LATEST_VERSION="12.5.8"
 else
-    echo "Unsupported device, press any key to continue if you are going to do an untethered downgrade with saved SHSH (use --downgrade [IPSW FILE] [SHSH BLOB])"
+    echo "Unsupported device, press enter to continue if you are going to do an untethered downgrade with saved SHSH (use --downgrade [IPSW FILE] [SHSH BLOB])"
     read -p ""
 fi
 
@@ -911,6 +911,19 @@ case "$1" in
                     ;;
             esac
         fi
+        if [[ $IDENTIFIER == iPhone6,2 ]] && [[ $IOS_VERSION != 7.* ]]; then
+            echo "iPhone6,2 does not support 8.0-9.3.5 seprmvr64 restores yet in surrealra1n."
+            exit 1
+        elif [[ $IDENTIFIER == iPhone7,2 || $IDENTIFIER == iPhone7,1 ]] && [[ $IOS_VERSION != 8.4.1 ]]; then
+            echo "iPhone 6 (and 6 Plus) does not support any other than 8.4.1 seprmvr64 restores via surrealra1n"
+            exit 1
+        elif [[ $IDENTIFIER == iPad5,3 ]] && [[ $IOS_VERSION != 8.* ]]; then
+            echo "This version is not supported yet in seprmvr64-ipsw"
+            exit 1
+        elif [[ $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 || $IDENTIFIER == iPad5,4 || $IDENTIFIER == iPad4* ]]; then
+            echo "Device is not supported yet for seprmvr64-ipsw"
+            exit 1
+        fi
         # A8(X) iOS 8.0-9.x activation error candidates
         if [[ $IDENTIFIER == iPad5* || $IDENTIFIER == iPod7* || $IDENTIFIER == iPhone7* ]] && [[ $IOS_VERSION == 9.3* ]]; then
             echo "[!] 9.3.x restores are blocked on A8(X) devices for the following reason."
@@ -931,7 +944,7 @@ case "$1" in
         if [[ $FORCE_ACTIVATE == 1 ]] && [[ $IDENTIFIER == iPad5* || $IDENTIFIER == iPod7* || $IDENTIFIER == iPhone7* ]] && [[ $IOS_VERSION == 8.2* || $IOS_VERSION == 8.1* || $IOS_VERSION == 8.0* ]]; then
             echo "Stitching activation may work on this version, but there is a much higher chance of the device deactivating especially right after the first boot."
             echo "It is recommended to do iOS 8.3 or later instead."
-            read -p "Press any key to continue"
+            read -p "Press enter to continue"
         fi
         if [[ "$5" == "--jailbreak" || "$6" == "--jailbreak" ]]; then
             JAILBREAK=1
@@ -939,12 +952,12 @@ case "$1" in
         if [[ $JAILBREAK != 1 ]]; then
             echo "Jailbreak option disabled."
             echo "Cydia will not be installed with this restore."
-            read -p "Press any key to continue"
+            read -p "Press enter to continue"
         fi
         if [[ $JAILBREAK == 1 ]] && [[ $IOS_VERSION != 7.* ]]; then
             echo "Jailbreak option not supported for iOS 8.0-9.3.5 yet, only 7.0-7.1.2."
             JAILBREAK=0
-            read -p "Press any key to continue"
+            read -p "Press enter to continue"
         fi
         if [[ $JAILBREAK == 1 ]]; then
             mkdir jbresources
@@ -1008,7 +1021,7 @@ case "$1" in
             sudo ./bin/sshpass -p "$sshpwd" scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $CONNECT_AS@"$ip_address":/private/var/mobile/Library/FairPlay/iTunes_Control/iTunes/IC-Info.sisv activation_records/$CACHED_SERIAL/IC-Info.sisv
             if [[ ! -f "activation_records/$CACHED_SERIAL/IC-Info.sisv" ]]; then
                 echo "IC-Info.sisv did not save correctly. Certain things may be broken."
-                read -p "You can press any key to continue, but it is usually not recommended to have an incomplete backup of activation records."
+                read -p "You can press enter to continue, but it is usually not recommended to have an incomplete backup of activation records."
             fi
             if [[ $DEVICE_VERSION == 15.* ]]; then
                 # re-set permissions for com.apple.commcenter.device_specific_nobackup.plist and move to different dir, so you can download it when connected via mobile
@@ -1020,7 +1033,7 @@ case "$1" in
             fi
             if [[ ! -f "activation_records/$CACHED_SERIAL/com.apple.commcenter.device_specific_nobackup.plist" ]]; then 
                 echo "com.apple.commcenter.device_specific_nobackup.plist did not save correctly."
-                read -p "You can press any key to continue, but you will not have cellular signal after activation records are stitched (that is if of course, baseband update doesn't have to be skipped)."
+                read -p "You can press enter to continue, but you will not have cellular signal after activation records are stitched (that is if of course, baseband update doesn't have to be skipped)."
             fi
         fi        
         echo "[!] IMPORTANT: This feature is only supported on iOS 7.0 - 9.3.5. DO NOT TRY THIS on 10.0 or later"
@@ -1029,7 +1042,7 @@ case "$1" in
         echo "[!] 2. Passcode will NOT work, at all. Your passcode is technically NULL."
         echo "[!] 3. Encrypted Wi-Fi networks will not work. Use an open network instead."
         echo "[!] 4. You will have deep sleep issues, and POTENTIALLY other issues."
-        read -p "Press any key to continue. Or press CTRL + C to cancel."
+        read -p "Press enter to continue. Or press CTRL + C to cancel."
         echo "[*] Making custom IPSW..."
         savedir="noseprestore/$IDENTIFIER/$IOS_VERSION"
         mkdir -p "$savedir"
@@ -1089,13 +1102,12 @@ case "$1" in
                 ./bin/hfsplus "work/ramdisk.raw" rm usr/local/bin/restored_external
                 ./bin/hfsplus "work/ramdisk.raw" add restored_patch usr/local/bin/restored_external
                 ./bin/hfsplus "work/ramdisk.raw" chmod 100755 usr/local/bin/restored_external
-                if [[ $IDENTIFIER == iPad5,3 ]] && [[ $dist == 3 || $dist == 4 ]]; then
-                    # options plist haxx, to fix some ASR errors
-                    ./bin/hfsplus "work/ramdisk.raw" extract usr/local/share/restore/options.j81.plist
-                    plutil -replace SystemPartitionSize -integer 4200 options.j81.plist
+                if [[ $IDENTIFIER == iPad5,3 || $IDENTIFIER == iPad5,4 ]]; then
+                    # options plist change
+                    curl -L -o options.n61.plist https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/dualboot/options.n61.plist
                     ./bin/hfsplus "work/ramdisk.raw" rm usr/local/share/restore/options.j81.plist
-                    ./bin/hfsplus "work/ramdisk.raw" add options.j81.plist usr/local/share/restore/options.j81.plist
-                    rm -rf options.j81.plist
+                    ./bin/hfsplus "work/ramdisk.raw" add options.n61.plist usr/local/share/restore/options.j81.plist
+                    rm -rf options.n61.plist
                 fi
                 if [[ $IDENTIFIER == iPhone7,2 ]]; then
                     # options plist change
@@ -1298,7 +1310,7 @@ case "$1" in
         echo "[!] 4. You will have deep sleep issues, and POTENTIALLY other issues."
         echo "[!] 5. iOS 7.0 - 7.0.6 will likely freeze a lot after tether booting. It is recommended to do iOS 7.1 or later instead."
         echo "[!] 6. iOS 8.x will be stuck at Slide to Upgrade afterwards. It is recommended to do 7.x or 9.x instead"
-        read -p "Press any key to continue. Or press CTRL + C to cancel."
+        read -p "Press enter to continue. Or press CTRL + C to cancel."
         echo "[*] Starting Restore to iOS $IOS_VERSION..."
         savedir="noseprestore/$IDENTIFIER/$IOS_VERSION"
         echo "Fetching shsh blobs for iOS $LATEST_VERSION (to extract im4m later)"
@@ -1524,8 +1536,8 @@ case "$1" in
             echo "[!] You cannot restore to this version or make a custom IPSW for it"
             exit 1
         fi
-        if [[ $IDENTIFIER == iPad4,4 || $IDENTIFIER == iPad4,5 ]] && [[ $IOS_VERSION == 10.1* || $IOS_VERSION == 10.2* ]]; then
-            echo "[!] 10.1-10.2.1 tethered support is not added yet to the iPad mini 2"
+        if [[ $IDENTIFIER == iPad4,4 || $IDENTIFIER == iPad4,5 || $IDENTIFIER == iPod7* || $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5* ]] && [[ $IOS_VERSION == 10.1* || $IOS_VERSION == 10.2* ]]; then
+            echo "[!] 10.1-10.2.1 tethered support is not added yet for this device"
             echo "[!] We may add this support in a future update. For now, please do 10.3 or later"
             exit 1
         fi
@@ -1535,7 +1547,7 @@ case "$1" in
             echo "[!] The following issues will occur after the restore: Activation issues, Touch ID not working, unable to connect to password-protected Wi-Fi networks, etc. Device passcode may work though."
             echo "[!] This is ONLY recommended for advanced users, saving activation tickets with an SSH ramdisk is required before restoring to this version"
             echo "[!] PLEASE. PLEASE! DO NOT use this to bypass iCloud, only save activation tickets on a device you legally own"
-            read -p "Press any key to continue"
+            read -p "Press enter to continue"
         fi
         if [[ $IDENTIFIER == iPhone10* ]] && [[ $IOS_VERSION == 16.6* ]]; then
             echo "[!] iOS $LATEST_VERSION Cryptex is partially compatible"
@@ -1555,7 +1567,7 @@ case "$1" in
             echo "[!] The following issues will occur after the restore: Activation issues, unable to connect to password-protected Wi-Fi networks, etc. Device passcode may work though."
             echo "[!] This is ONLY recommended for advanced users, saving activation tickets with an SSH ramdisk is required before restoring to this version"
             echo "[!] PLEASE. PLEASE! DO NOT use this to bypass iCloud, only save activation tickets on a device you legally own"
-            read -p "Press any key to continue"
+            read -p "Press enter to continue"
         fi
         if [[ "$IDENTIFIER" == iPhone7* ]] && [[ "$IOS_VERSION" == 11.2* || "$IOS_VERSION" == 11.1* || "$IOS_VERSION" == 11.0* || "$IOS_VERSION" == 10.0* || "$IOS_VERSION" == 9.* || "$IOS_VERSION" == 8.* ]]; then
             echo "[!] SEP is incompatible"
@@ -1577,7 +1589,7 @@ case "$1" in
         if [[ "$IDENTIFIER" == iPhone6* ]] && [[ "$IOS_VERSION" == 10.3.3 ]]; then
             echo "[!] iOS 10.3.3 can be restored untethered via OTA downgrade"
             echo "[!] It is recommended to use Legacy iOS Kit to downgrade to 10.3.3 untethered (https://github.com/LukeZGD/Legacy-iOS-Kit)"
-            read -p "Press any key to continue with iOS 10.3.3 tethered downgrade"
+            read -p "Press enter to continue with iOS 10.3.3 tethered downgrade"
         fi
 
         if [[ "$IDENTIFIER" == iPad7,5 ]] && [[ $IOS_VERSION == 13.4* || $IOS_VERSION == 13.5* || $IOS_VERSION == 13.6* || $IOS_VERSION == 13.7* || $IOS_VERSION == 14.* || $IOS_VERSION == 15.* ]]; then
@@ -1589,14 +1601,14 @@ case "$1" in
             echo "[!] Touch ID will cease to function fully on 13.x, but it is broken on iPadOS 14-15. And setting a passcode may cause the device to crash."
             echo "[!] And if you are restoring to iPadOS 13.4 - 13.7, you will be stuck in a blank screen after the restore. Put the device into real DFU mode and boot it normally."
             echo "[!] It is recommended to use turdus merula instead: https://sep.lol"
-            read -p "Press any key to continue"
+            read -p "Press enter to continue"
         fi 
         if [[ "$IDENTIFIER" == iPad5* ]] && [[ $IOS_VERSION == 13.* ]]; then
             echo "[!] SEP is partially incompatible"
             echo "[!] The iPadOS $LATEST_VERSION SEP is not fully compatible with this version."
             echo "[!] The following issues may occur:"
             echo "[!] Touch ID will cease to function fully."
-            read -p "Press any key to continue"
+            read -p "Press enter to continue"
         fi 
         if [[ "$IDENTIFIER" == iPad5* ]] && [[ $IOS_VERSION == 12.* || $IOS_VERSION == 11.4* || $IOS_VERSION == 11.3* ]]; then
             echo "[!] SEP is partially incompatible"
@@ -1607,7 +1619,7 @@ case "$1" in
                 echo "[!] USB accessories will not work, thus you cannot sideload with a PC"
                 echo "[!] To sideload a jailbreak (eg: Chimera, unc0ver), you will need to use https://jailbreaks.app when it is signed."
             fi
-            read -p "Press any key to continue"
+            read -p "Press enter to continue"
         fi 
         if [[ "$IDENTIFIER" == iPad5,3 || $IDENTIFIER == iPad5,4 ]] && [[ $IOS_VERSION == 11.2* || $IOS_VERSION == 11.1* || $IOS_VERSION == 11.0* || $IOS_VERSION == 10.* || $IOS_VERSION == 9.* || $IOS_VERSION == 8.* ]]; then
             echo "[!] SEP is incompatible"
@@ -1635,7 +1647,7 @@ case "$1" in
                 echo "[!] A future update will add the required buildmanifests to do this method on iPhone 8 Plus, and X." 
                 exit 1
             fi
-            read -p "Press any key to continue"
+            read -p "Press enter to continue"
         fi 
         if [[ "$IDENTIFIER" == iPhone10* ]] && [[ $IOS_VERSION == 13.* || $IOS_VERSION == 12.* || $IOS_VERSION == 11.* ]]; then
             echo "[!] SEP is incompatible"
