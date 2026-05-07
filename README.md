@@ -10,25 +10,31 @@ iPod touch 6:
 
 10.0 - 11.2.6 (no support)
 
+10.3.x (experimental support)
+
 11.3 - 12.5.7 (supported with SEP)
 
 iPhone 6 and 6 Plus:
 
-8.0 - 11.2.6 (no support)
+8.0 - 11.2.6 (no support, except for 8.4.1 seprmvr64)
+
+10.3.x (experimental support)
 
 11.3 - 12.5.7 (supported with SEP)
 
 iPad Air 2:
 
-8.1 - 13.3.1 (no support)
+8.1 - 11.2.6 (no support)
 
-13.4 - 15.8.5 (supported with SEP, 13 will not have Touch ID though)
+11.3 - 15.8.5 (supported with SEP, iOS 11.3-13.7 will not have Touch ID though)
 
 iPad mini 4:
 
 9.0 - 13.3.1 (no support)
 
-13.4 - 15.8.5 (supported with SEP, 13 will not have Touch ID though)
+10.3.x (experimental support)
+
+11.3 - 15.8.5 (supported with SEP, 13 will not have Touch ID though)
 
 iPhone 5S:
 
@@ -51,6 +57,20 @@ iPhone 8 Plus and iPhone X:
 11.0 - 14.2 (no support)
 
 14.3 - 15.6.1 (supported with SEP, broken features)
+
+# Experimental devices (untested, please open an issue if there's any problems with iPad mini 2)
+
+iPad mini 2 (excluding iPad4,6):
+
+7.0.3 - 10.2.1 (no support)
+
+10.3 - 12.5.7 (supported with SEP, 11.0-11.2.6 will have broken features)
+
+iPad mini 2 (iPad4,6):
+
+7.1 - 11.2.6 (no support)
+
+11.3 - 12.5.7 (supported with SEP)
 
 # Usage:
 
@@ -86,4 +106,7 @@ Example: `./surrealra1n.sh --seprmvr64-boot 8.4.1`
 
 libimobiledevice team, tihmstar, LukeeGD/LukeZGD, xerub, plooshi, etc! (for the tools it has to download)
 
-Mineek - iPhone X restored patcher, used for ipx restores 14.3-15.6.1 (my fork of the patcher is used for seprmvr64 restores on A8+), and seprmvr64
+Mineek - iPhone X restored patcher, used for ipx restores 14.3-15.6.1 (my fork of the patcher is used for seprmvr64 restores on A8+), openra1n, and seprmvr64
+
+
+
