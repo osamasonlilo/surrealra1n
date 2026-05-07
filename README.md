@@ -2,6 +2,8 @@
 
 A tethered downgrade tool for iPhone 5S, all A8(X), iPad 6 (one A10 device), and A11 devices
 
+Supports macOS and Linux
+
 # Compatible devices and versions:
 
 iPod touch 6:
