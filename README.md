@@ -2,6 +2,8 @@
 
 A tethered downgrade tool for iPhone 5S, all A8(X), iPad 6 (one A10 device), and A11 devices
 
+Supports macOS and Linux
+
 # Compatible devices and versions:
 
 iPod touch 6:
@@ -10,11 +12,15 @@ iPod touch 6:
 
 10.0 - 11.2.6 (no support)
 
+10.3.x (experimental support)
+
 11.3 - 12.5.7 (supported with SEP)
 
 iPhone 6 and 6 Plus:
 
 8.0 - 11.2.6 (no support, except for 8.4.1 seprmvr64)
+
+10.3.x (experimental support)
 
 11.3 - 12.5.7 (supported with SEP)
 
@@ -28,7 +34,9 @@ iPad mini 4:
 
 9.0 - 13.3.1 (no support)
 
-13.4 - 15.8.5 (supported with SEP, 13 will not have Touch ID though)
+10.3.x (experimental support)
+
+11.3 - 15.8.5 (supported with SEP, 13 will not have Touch ID though)
 
 iPhone 5S:
 
@@ -51,6 +59,8 @@ iPhone 8 Plus and iPhone X:
 11.0 - 14.2 (no support)
 
 14.3 - 15.6.1 (supported with SEP, broken features)
+
+# Experimental devices (untested, please open an issue if there's any problems with iPad mini 2)
 
 iPad mini 2 (excluding iPad4,6):
 
