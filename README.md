@@ -4,6 +4,8 @@ A tethered downgrade tool for iPhone 5S, all A8(X), iPad 6 (one A10 device), and
 
 Supports macOS and Linux
 
+For support, join the [surrealra1n](https://discord.gg/kDXVHhTQs2) Discord Server
+
 # Compatible devices and versions:
 
 iPod touch 6:
