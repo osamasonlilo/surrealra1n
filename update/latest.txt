@@ -1,32 +1,6 @@
-v1.3
+v1.3.1
 
 RELEASE NOTES:
 
-Adds iOS 10.3.x downgrade support (WITH MOST SEP FUNCTIONS INTACT) for A8 (excluding A8X) devices
-
-Adds make-custom-ipsw-2 for A8(X) iPad restores using idevicerestore.
-
-Adds macOS support for Apple Silicon Macs and Intel Macs.
-Adds iOS 10.3.x downgrade support for A8 (non-A8X) devices with most SEP functions intact.
-Adds iOS 11.3–12.4.1 tethered downgrade support for A8(X) iPads.
-
-Adds jailbreak option for seprmvr64 IPSW creation:
-
-Use --jailbreak at the end of the command to create a custom 7.x IPSW with jailbreak already installed.
-
-Brings back --fix-ios8.
-
-Adds iOS 7 tethered downgrade support for iPhone6,2 (Global).
-Note: iPhone6,2 supports only iOS 7.0–7.1.2 at the time for seprmvr64-ipsw.
-
-Adds iOS 8.4.1 tethered downgrade support for iPhone 6 and 6 Plus (this uses seprmvr64, so you do lose SEP functions).
-
-Adds iOS 16.6.x downgrade support for A11 devices.
-iOS 16.0–16.5.1 is not supported due to Cryptex incompatibility.
-
-Updates localboot for iOS 14+ tethered downgrades.
-Fixes A11 deep sleep issues.
-
-Fixes camera and flashlight on iPhone X and iPhone 8 tethered downgrades.
-Fixes AVE2 on iOS 15.x tethered restores.
+update hardcoded latest from 15.8.7 to 15.8.8, 16.7.15 to 16.7.16
 
