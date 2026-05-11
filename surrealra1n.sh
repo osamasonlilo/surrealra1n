@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3"
+CURRENT_VERSION="v1.3.1"
 
 echo "surrealra1n - $CURRENT_VERSION"
 echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1"
@@ -735,11 +735,11 @@ elif [[ $IDENTIFIER == iPhone7* ]]; then
     NOSEP_DOWNGRADE="8.0 to 9.3.5"
     KERNELCACHE="kernelcache.release.iphone7"
 elif [[ $IDENTIFIER == iPhone10,1 || $IDENTIFIER == iPhone10,4 || $IDENTIFIER == iPhone10,2 || $IDENTIFIER == iPhone10,5 ]]; then
-    LATEST_VERSION="16.7.15"
+    LATEST_VERSION="16.7.16"
     DOWNGRADE_RANGE="14.3 to 15.6.1"
     KERNELCACHE="kernelcache.release.iphone10"
 elif [[ $IDENTIFIER == iPhone10,3 || $IDENTIFIER == iPhone10,6 ]]; then
-    LATEST_VERSION="16.7.15"
+    LATEST_VERSION="16.7.16"
     DOWNGRADE_RANGE="14.3 to 15.6.1"
     KERNELCACHE="kernelcache.release.iphone10b"
 elif [[ $IDENTIFIER == iPod7,1 ]]; then
@@ -761,16 +761,8 @@ elif [[ $IDENTIFIER == iPod7,1 ]]; then
     IBEC7="iBEC.n102ap.RELEASE.im4p"
     ALLFLASH="all_flash.n102ap.production"
     USE_BASEBAND="--no-baseband"
-elif [[ $IDENTIFIER == iPad7,5 ]]; then
-    LATEST_VERSION="17.7.10"
-    DOWNGRADE_RANGE="13.4 to 15.7"
-    KERNELCACHE="kernelcache.release.ipad7b"
-    IBSS="iBSS.ipad7b.RELEASE.im4p"
-    IBEC="iBEC.ipad7b.RELEASE.im4p"
-    DEVICETREE="DeviceTree.j71bap.im4p"
-    USE_BASEBAND="--no-baseband"
 elif [[ $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 ]]; then
-    LATEST_VERSION="15.8.7"
+    LATEST_VERSION="15.8.8"
     DOWNGRADE_RANGE="11.3 to 15.8.5"
     NOSEP_DOWNGRADE="9.0 to 9.3.5"
     IBSS="iBSS.ipad5.RELEASE.im4p"
@@ -779,7 +771,7 @@ elif [[ $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 ]]; then
     LLB="LLB.ipad5.RELEASE.im4p"
     IBOOT="iBoot.ipad5.RELEASE.im4p"
 elif [[ $IDENTIFIER == iPad5,3 || $IDENTIFIER == iPad5,4 ]]; then
-    LATEST_VERSION="15.8.7"
+    LATEST_VERSION="15.8.8"
     DOWNGRADE_RANGE="11.3 to 15.8.5"
     NOSEP_DOWNGRADE="8.1 to 9.3.5"
     IBSS="iBSS.ipad5b.RELEASE.im4p"
@@ -2302,10 +2294,25 @@ case "$1" in
                 echo "[!] No .shsh2 blob found in shsh folder. Aborting."
                 exit 1
             fi
-            echo "Immediately after idevicerestore sends the RestoreLogo (pay attention to TERMINAL output), disconnect the device, and press enter to continue"
-            sudo LD_LIBRARY_PATH="lib" ./bin/idevicerestore $restoredir/custom.ipsw
-            read -p "Press enter to continue"
+            unzip -j "$restoredir/custom.ipsw" "Firmware/dfu/$IBSS" -d tmp
+            unzip -j "$restoredir/custom.ipsw" "Firmware/dfu/$IBEC" -d tmp
+            ./bin/img4tool -e -s $shshpath2 -m im4m
+            ./bin/img4 -i tmp/$IBSS -o tmp/iBSS.img4 -M im4m -T ibss
+            ./bin/img4 -i tmp/$IBEC -o tmp/iBEC.img4 -M im4m -T ibec
+            ./bin/irecovery -f tmp/iBSS.img4
+            ./bin/irecovery -f tmp/iBEC.img4
+            echo "Checking if device is in Recovery mode"
+            MODE=$(./bin/irecovery -q | grep "^MODE:" | cut -d ':' -f2 | xargs)
+            if [[ $MODE == Recovery ]]; then
+                echo "Device is in recovery mode"
+                sleep 1
+            else
+                echo "Device not detected in Recovery, aborting"
+                rm -rf "tmp"
+                exit 1
+            fi
             sudo ./futurerestore/futurerestore -t $shshpath2 $USE_BASEBAND --latest-sep --no-rsep $INSTALL_TYPE $restoredir/custom.ipsw
+            rm -rf "tmp"
             echo "Restore has finished! Read above if there's any errors"
             exit 1
         fi
