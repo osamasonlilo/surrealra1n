@@ -4,7 +4,7 @@ A tethered downgrade tool for iPhone 5S, all A8(X), and A11 devices
 
 Supports macOS and Linux
 
-For support, join the [surrealra1n](https://discord.gg/kDXVHhTQs2) Discord Server
+For surrealra1n support, join the [surrealra1n](https://discord.gg/kDXVHhTQs2) Discord Server
 
 # Compatible devices and versions:
 
@@ -12,33 +12,39 @@ iPod touch 6:
 
 8.4 - 9.3.5 (seprmvr64 restore)
 
-10.0 - 11.2.6 (no support)
+10.0 - 10.2.1 (no support)
 
-10.3.x (experimental support)
+10.3.x (supported with SEP)
+
+11.0 - 11.2.6 (no support)
 
 11.3 - 12.5.7 (supported with SEP)
 
 iPhone 6 and 6 Plus:
 
-8.0 - 11.2.6 (no support, except for 8.4.1 seprmvr64)
+8.0 - 10.2.1 (no support, except for 8.4.1 seprmvr64)
 
-10.3.x (experimental support)
+10.3.x (supported with SEP, no Touch ID)
+
+11.0 - 11.2.6 (no support)
 
 11.3 - 12.5.7 (supported with SEP)
 
 iPad Air 2:
 
-8.1 - 11.2.6 (no support)
+8.1 - 11.2.6 (no support). Except for 8.1-8.4.1 seprmvr64 for Wi-Fi only iPad Air 2.
 
 11.3 - 15.8.5 (supported with SEP, iOS 11.3-13.7 will not have Touch ID though)
 
 iPad mini 4:
 
-9.0 - 13.3.1 (no support)
+9.0 - 10.2.1 (no support)
 
-10.3.x (experimental support)
+10.3.x (supported with SEP, no Touch ID though)
 
-11.3 - 15.8.5 (supported with SEP, 13 will not have Touch ID though)
+11.0 - 11.2.6 (no support)
+
+11.3 - 15.8.5 (supported with SEP, iOS 11.3-13.7 will not have Touch ID though)
 
 iPhone 5S:
 
