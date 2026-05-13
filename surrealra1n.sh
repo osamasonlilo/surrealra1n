@@ -1,5 +1,29 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3.1"
+CURRENT_VERSION="v1.3.2"
+
+set -euo pipefail
+
+LOG_FILE="surrealra1n-log-$(date +%Y%m%d-%H%M%S).txt"
+
+# Save ALL output to log while still showing terminal output
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+error_handler() {
+    local exit_code=$?
+    local line_number=$1
+
+    echo
+    echo "[!] An error occurred on line $line_number."
+    echo "[!] Exit code: $exit_code"
+    echo
+    echo "[!] Please open an issue on the GitHub (https://github.com/pwnerblu/surrealra1n/issues) and attach this log, and relevant details of the issue:"
+    echo "    $LOG_FILE"
+    echo
+    echo "[!] Issues that do not contain the relevant details may be closed and dismissed without response"
+    exit "$exit_code"
+}
+
+trap 'error_handler $LINENO' ERR
 
 echo "surrealra1n - $CURRENT_VERSION"
 echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1"
@@ -141,6 +165,21 @@ find_dmg() {
     cut -d' ' -f2-
 }
 
+# boot file error handling improvements
+
+require_file() {
+    if [[ ! -f "$1" ]]; then
+        echo "[!] Required file missing: $1"
+        exit 1
+    fi
+}
+
+require_dir() {
+    if [[ ! -d "$1" ]]; then
+        echo "[!] Required directory missing: $1"
+        exit 1
+    fi
+}
 
 #
 
@@ -476,7 +515,7 @@ fi
 
 
 # Run ideviceinfo and capture both output and return code
-IDEVICE_INFO=$(ideviceinfo 2>&1)
+IDEVICE_INFO=$(ideviceinfo 2>&1) || true
 IDEVICE_STATUS=$?
 
 if [[ $IDEVICE_STATUS -eq 0 && "$IDEVICE_INFO" != *"No device found!"* ]]; then
@@ -495,7 +534,7 @@ else
     echo "[*] Device is not in normal mode. Trying recovery/DFU mode..."
 
     # Try irecovery
-    IRECOVERY_INFO=$(./bin/irecovery -q 2>/dev/null)
+    IRECOVERY_INFO=$(./bin/irecovery -q 2>/dev/null) || true
 
     if [[ -n "$IRECOVERY_INFO" ]]; then
         echo "[*] Device is in Recovery or DFU mode."
@@ -509,16 +548,8 @@ else
 
     else
         echo "[!] No device detected in normal or recovery mode."
-        echo "[!] You can run in no-device/surrealra1n test mode though, but please don't restore devices in no-device/surrealra1n test mode"
-        read -p "Please enter the Identifier you would like to use (example: iPhone10,1): " IDENTIFIER
-        IS_IN_TEST="yes"
+        exit 1
     fi
-fi
-
-if [[ $IS_IN_TEST == yes ]]; then
-    echo "[!] surrealra1n is running in no-device/test mode. Please do not restore any devices with this."
-    echo "You may test some functionality though other than restoring."
-    sleep 4
 fi
 
 if [[ $IDENTIFIER == iPhone6* ]]; then
@@ -1375,7 +1406,7 @@ case "$1" in
             echo "[!] No .shsh2 blob found in shsh folder. Aborting."
             exit 1
         fi
-        if [[ ! -d "$savedir" ]]; then
+        if [[ ! -d "$savedir" ]] || [[ ! -f "$savedir"/iBSS.img4 || ! -f "$savedir"/iBEC.img4 || ! -f "$savedir"/DeviceTree.img4 || ! -f "$savedir"/Kernelcache.img4 ]]; then
             echo "[!] New boot files must be created."
             IPSW_PATH=$($zenity --file-selection --title="Select the iOS $IOS_VERSION IPSW file")
             sleep 2
@@ -1409,6 +1440,14 @@ case "$1" in
             ./bin/irecovery -c bootx
             echo "Your device should now boot."
             exit 0
+        fi
+        if [[ -z "$IPSW_PATH" ]]; then
+            echo "[!] No IPSW selected. Aborting."
+            exit 1
+        fi
+        if [[ ! -f "$IPSW_PATH" ]]; then
+            echo "[!] IPSW does not exist: $IPSW_PATH"
+            exit 1
         fi
         rm -rf "$savedir"
         mkdir -p "$savedir"
@@ -1472,6 +1511,14 @@ case "$1" in
         ./bin/kerneldiff "work/kcache.raw" "work/kcache.patched" "work/kcache.bpatch"
         ./bin/img4 -i "work/kcache.im4p" -o "$savedir/Kernelcache.img4" -T rkrn -P "work/kcache.bpatch" -J -M $im4m
         echo "Patching complete!"
+        echo "[*] Verifying generated boot files..."
+
+        require_file "$savedir/iBSS.img4"
+        require_file "$savedir/iBEC.img4"
+        require_file "$savedir/DeviceTree.img4"
+        require_file "$savedir/Kernelcache.img4"
+
+        echo "[*] Boot files created successfully." 
         rm -rf "work"
         rm -rf "tmp1"
         echo "first, your device needs to be in pwndfu mode. pwning with gaster"
@@ -2485,13 +2532,23 @@ case "$1" in
 
         # Check for boot files
         BOOT_DIR="boot/$IDENTIFIER/$IOS_VERSION"
-        if [[ ! -d "$BOOT_DIR" ]]; then
+        if [[ ! -d "$BOOT_DIR" ]] || [[ ! -f "$BOOT_DIR"/iBSS.img4 || ! -f "$BOOT_DIR"/iBEC.img4 || ! -f "$BOOT_DIR"/DeviceTree.img4 || ! -f "$BOOT_DIR"/Kernelcache.img4 ]]; then
             echo "[*] Boot files not found. Creating new boot files at $BOOT_DIR..."
             if [[ $IDENTIFIER == iPhone10* ]] && [[ $IOS_VERSION == 14.2* || $IOS_VERSION == 14.1* || $IOS_VERSION == 14.0* ]]; then
                 IPSW_PATH="restorefiles/$IDENTIFIER/$IOS_VERSION/custom.ipsw"
             else
                 echo "Drag and drop the iOS $IOS_VERSION IPSW file."
                 IPSW_PATH=$($zenity --file-selection --title="Select the iOS $IOS_VERSION IPSW file")
+            fi
+            if [[ -z "$IPSW_PATH" ]]; then
+                echo "[!] No IPSW selected. Aborting."
+                sudo rm -rf "$BOOT_DIR"
+                exit 1
+            fi
+            if [[ ! -f "$IPSW_PATH" ]]; then
+                echo "[!] IPSW does not exist: $IPSW_PATH"
+                sudo rm -rf "$BOOT_DIR"
+                exit 1
             fi
             mkdir -p to_patch
             mkdir -p "$BOOT_DIR"
@@ -2654,7 +2711,22 @@ case "$1" in
                 # camera fix
                 unzip -j "$IPSW_PATH" "Firmware/ave/AppleAVE2FW_H9.im4p" -d to_patch
                 ./bin/img4 -i "to_patch/AppleAVE2FW_H9.im4p" -o "$BOOT_DIR/ave-firmware.img4" -T avef -M $im4m
-            fi        
+            fi  
+            echo "[*] Verifying generated boot files..."
+
+            require_file "$BOOT_DIR/iBSS.img4"
+            require_file "$BOOT_DIR/iBEC.img4"
+            require_file "$BOOT_DIR/DeviceTree.img4"
+            require_file "$BOOT_DIR/Kernelcache.img4"
+
+            if [[ "$IOS_VERSION" == 12.* || \
+                  "$IOS_VERSION" == 13.* || \
+                  "$IOS_VERSION" == 14.* || \
+                  "$IOS_VERSION" == 15.* ]]; then
+                require_file "$BOOT_DIR/Trustcache.img4"
+            fi
+
+            echo "[*] Boot files created successfully."      
             rm -rf "to_patch"
         else
             echo "[*] Existing boot files found in $BOOT_DIR"
