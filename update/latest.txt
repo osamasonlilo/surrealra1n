@@ -1,6 +1,6 @@
-v1.3.1
+v1.3.2
 
 RELEASE NOTES:
 
-update hardcoded latest from 15.8.7 to 15.8.8, 16.7.15 to 16.7.16
+Add more error handling in the script
 
