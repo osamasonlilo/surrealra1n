@@ -1,6 +1,6 @@
-v1.3.2
+v1.3.3
 
 RELEASE NOTES:
 
-Add more error handling in the script
+Improvement on error handler
 
