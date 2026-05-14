@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3.4"
+CURRENT_VERSION="v1.3.5"
 
 set -euo pipefail
 
@@ -920,7 +920,7 @@ case "$1" in
         BASE_IPSW="$3"
         IOS_VERSION="$4"
         FORCE_ACTIVATE=""
-        if [[ "$5" == "--stitch-activation" || "$6" == "--stitch-activation" ]]; then
+        if [[ "${5:-}" == "--stitch-activation" || "${6:-}" == "--stitch-activation" ]]; then
             case "$IOS_VERSION" in
                 7.*|8.*|9.0*|9.1*|9.2*)
                     FORCE_ACTIVATE=1
@@ -969,7 +969,7 @@ case "$1" in
             echo "It is recommended to do iOS 8.3 or later instead."
             read -p "Press enter to continue"
         fi
-        if [[ "$5" == "--jailbreak" || "$6" == "--jailbreak" ]]; then
+        if [[ "${5:-}" == "--jailbreak" || "${6:-}" == "--jailbreak" ]]; then
             JAILBREAK=1
         fi
         if [[ $JAILBREAK != 1 ]]; then
