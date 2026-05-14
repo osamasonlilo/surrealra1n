@@ -1,6 +1,6 @@
-v1.3.6
+v1.3.7
 
 RELEASE NOTES:
 
-Improvement on error handler.
+don't fatally quit the script if openra1n fails to compile
 
