@@ -2,5 +2,5 @@ v1.3.6
 
 RELEASE NOTES:
 
-Improvement on error handler
+Improvement on error handler.
 
