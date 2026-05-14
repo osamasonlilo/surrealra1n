@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3.2"
+CURRENT_VERSION="v1.3.3"
 
 set -euo pipefail
 
@@ -335,7 +335,7 @@ elif [[ $dist == 3 ]]; then
     cd futurerestore || exit
     unzip -o futurerestore.zip
     tar -xf futurerestore-macOS-v2.0.0-Build_329-RELEASE.tar.xz
-    cp futurerestore-macOS-v2.0.0-Build_329-RELEASE/* .
+    cp futurerestore-macOS-v2.0.0-Build_329-RELEASE/* . || true
     chmod +x futurerestore
     rm -rf *.tar.xz
     rm -rf *.sh
@@ -421,7 +421,7 @@ elif [[ $dist == 4 ]]; then
     cd futurerestore || exit
     unzip -o futurerestore.zip
     tar -xf futurerestore-macOS-v2.0.0-Build_329-RELEASE.tar.xz
-    cp futurerestore-macOS-v2.0.0-Build_329-RELEASE/* .
+    cp futurerestore-macOS-v2.0.0-Build_329-RELEASE/* . || true
     chmod +x futurerestore
     rm -rf *.tar.xz
     rm -rf *.sh
@@ -501,7 +501,7 @@ else
     cd futurerestore || exit
     unzip -o futurerestore.zip
     tar -xf futurerestore-Linux-x86_64-v2.0.0-Build_329-RELEASE.tar.xz
-    cp futurerestore-Linux-x86_64-v2.0.0-Build_329-RELEASE/* .
+    cp futurerestore-Linux-x86_64-v2.0.0-Build_329-RELEASE/* . || true
     chmod +x linux_fix.sh
     sudo ./linux_fix.sh
     rm -rf linux_fix.sh
@@ -870,7 +870,7 @@ Options:
         Create a custom IPSW for tethered restore, with seprmvr64. If you're going to 9.2.1 and lower, you can choose to attempt stitching activation records to pre-activate the seprmvr64 restore.
         - TARGET_IPSW_PATH: Path for the stock IPSW for target version
         - BASE_IPSW_PATH: Must be iOS $LATEST_VERSION IPSW
-        - iOS_VERSION: Target iOS version to restore ($NOSEP_DOWNGRADE)
+        - iOS_VERSION: Target iOS version to restore 
         - [--stitch-activation]: Attempt to stitch activation records into rootfs to pre-activate a restore (7.0 - 9.2.1 only). Device must be legitimately activated to save activation records, it can't be iCloud/MDM bypassed.
 
   --restore [iOS_VERSION]
