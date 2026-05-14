@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3.3"
+CURRENT_VERSION="v1.3.4"
 
 set -euo pipefail
 
@@ -146,7 +146,7 @@ stat_size() {
 find_dmg() {
     dir="$1"          # directory to search
     mode="$2"         # smallest | largest
-    max_size="$3"     # optional (bytes)
+    max_size="${3:-}"     # optional (bytes)
 
     find "$dir" -type f -name '*.dmg' ! -name '._*' -print |
     while IFS= read -r f; do
@@ -1306,7 +1306,7 @@ case "$1" in
         fi     
         ./bin/kerneldiff "work/kcache.raw" "work/kcache.patched" "work/kcache.bpatch"
         # wrap kcache into im4p
-        ./bin/img4 -i "work/kcache.im4p" -o "tmp2/$KERNELCACHE" -T rkrn -P "work/kcache.bpatch" -J
+        ./bin/img4 -i "work/kcache.im4p" -o "tmp2/$KERNELCACHE" -T rkrn -P "work/kcache.bpatch" -J || true
         echo "Patching complete!"
         rm -rf "work"
         rm -rf "tmp1"
@@ -1860,7 +1860,7 @@ case "$1" in
             ../bin/Kernel64Patcher2 kernel.patch kernel.patched -u 11 --skip-sks --skip-acm --skip-amfi
         fi
         ../bin/kerneldiff kernel.raw kernel.patched kernel.bpatch
-        ../bin/img4 -i kernel.orig -o kernel.im4p -T rkrn -P kernel.bpatch -J
+        ../bin/img4 -i kernel.orig -o kernel.im4p -T rkrn -P kernel.bpatch -J || true
         mv kernel.im4p ../$savedir/kernel.im4p
         # build ramdisk
         cd ..
@@ -2134,7 +2134,7 @@ case "$1" in
         ../bin/img4 -i kernel.orig -o kernel.raw
         ../bin/KPlooshFinder kernel.raw kernel.patched
         ../bin/kerneldiff kernel.raw kernel.patched kernel.bpatch
-        ../bin/img4 -i kernel.orig -o kernel.im4p -T rkrn -P kernel.bpatch -J
+        ../bin/img4 -i kernel.orig -o kernel.im4p -T rkrn -P kernel.bpatch -J || true
         mv kernel.im4p ../tmp2/$KERNELCACHE
         # build ramdisk
         cd ..
@@ -2633,53 +2633,53 @@ case "$1" in
             if [[ $IOS_VERSION == 14.* ]]; then
                 ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
                 ./bin/Kernel64Patcher to_patch/kernel.raw to_patch/kernel.patched -b
-                ./bin/img4 -i to_patch/kernel.patched -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -A -T rkrn -J        
+                ./bin/img4 -i to_patch/kernel.patched -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -A -T rkrn -J || true       
             fi
             if [[ $IOS_VERSION == 13.* ]]; then
                 ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
                 ./bin/Kernel64Patcher to_patch/kernel.raw to_patch/kernel.patched -b13 -n
-                ./bin/img4 -i to_patch/kernel.patched -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -A -T rkrn -J        
+                ./bin/img4 -i to_patch/kernel.patched -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -A -T rkrn -J || true       
             fi
             if [[ $IOS_VERSION == 13.* ]] && [[ $IDENTIFIER == iPad5* ]]; then
                 ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
                 ./bin/Kernel64Patcher to_patch/kernel.raw to_patch/kernel.patched -b13 -n
                 ./bin/kerneldiff to_patch/kernel.raw to_patch/kernel.patched to_patch/kernel.bpatch
-                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J        
+                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J || true       
             fi
             if [[ $IOS_VERSION == 12.* ]] && [[ $IDENTIFIER == iPad5* ]]; then
                 ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
                 ./bin/Kernel64Patcher2 to_patch/kernel.raw to_patch/kernel.patched -u 12 --skip-sks --skip-acm --skip-amfi
                 ./bin/kerneldiff to_patch/kernel.raw to_patch/kernel.patched to_patch/kernel.bpatch
-                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J     
+                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J || true    
             fi
             if [[ $IOS_VERSION == 11.* || $IOS_VERSION == 10.* ]] && [[ $IDENTIFIER == iPad5* ]]; then
                 ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
                 ./bin/Kernel64Patcher2 to_patch/kernel.raw to_patch/kernel.patched -u 11 --skip-sks --skip-acm --skip-amfi
                 ./bin/kerneldiff to_patch/kernel.raw to_patch/kernel.patched to_patch/kernel.bpatch
-                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J     
+                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J || true   
             fi
             if [[ $IDENTIFIER == iPhone7* ]] && [[ $IOS_VERSION == 10.* ]]; then
                 ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
                 ./bin/Kernel64Patcher2 to_patch/kernel.raw to_patch/kernel.patched -u 11 --skip-sks --skip-acm --skip-amfi
                 ./bin/kerneldiff to_patch/kernel.raw to_patch/kernel.patched to_patch/kernel.bpatch
-                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J   
+                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J || true   
             fi
             if [[ $IOS_VERSION == 15.* ]]; then
                 ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
                 ./bin/Kernel64Patcher to_patch/kernel.raw to_patch/kernel.patched -e -o -r -b15 
-                ./bin/img4 -i to_patch/kernel.patched -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -A -T rkrn -J    
+                ./bin/img4 -i to_patch/kernel.patched -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -A -T rkrn -J || true    
             fi
             if [[ $IOS_VERSION == 15.* ]] && [[ $IDENTIFIER == iPad5* ]]; then
                 ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
                 ./bin/Kernel64Patcher to_patch/kernel.raw to_patch/kernel.patched -e -o -r -b15
                 ./bin/kerneldiff to_patch/kernel.raw to_patch/kernel.patched to_patch/kernel.bpatch
-                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J        
+                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J || true        
             fi
             if [[ $IOS_VERSION == 14.* ]] && [[ $IDENTIFIER == iPad5* ]]; then
                 ./bin/img4 -i to_patch/kernelcache -o to_patch/kernel.raw
                 ./bin/Kernel64Patcher to_patch/kernel.raw to_patch/kernel.patched -b
                 ./bin/kerneldiff to_patch/kernel.raw to_patch/kernel.patched to_patch/kernel.bpatch
-                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J       
+                ./bin/img4 -i to_patch/kernelcache -o $BOOT_DIR/Kernelcache.img4 -M "$im4m" -P to_patch/kernel.bpatch -T rkrn -J || true      
             fi
             ./bin/img4 -i to_patch/iBSS.patched -o $BOOT_DIR/iBSS.img4 -M "$im4m" -A -T ibss
             ./bin/img4 -i to_patch/iBEC.patched -o $BOOT_DIR/iBEC.img4 -M "$im4m" -A -T ibec
