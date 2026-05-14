@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3.5"
+CURRENT_VERSION="v1.3.6"
 
 set -euo pipefail
 
@@ -38,6 +38,8 @@ echo "Enter your user password when prompted to"
 sudo -v || exit 1
 
 dist=0
+
+JAILBREAK=0
 
 DISTRO="Unsupported"
 ARCH="$(uname -m)"
@@ -919,7 +921,7 @@ case "$1" in
         TARGET_IPSW="$2"
         BASE_IPSW="$3"
         IOS_VERSION="$4"
-        FORCE_ACTIVATE=""
+        FORCE_ACTIVATE="0"
         if [[ "${5:-}" == "--stitch-activation" || "${6:-}" == "--stitch-activation" ]]; then
             case "$IOS_VERSION" in
                 7.*|8.*|9.0*|9.1*|9.2*)
