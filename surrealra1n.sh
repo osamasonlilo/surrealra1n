@@ -1,5 +1,5 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3.6"
+CURRENT_VERSION="v1.3.7"
 
 set -euo pipefail
 
@@ -312,8 +312,8 @@ elif [[ $dist == 3 ]]; then
     git clone https://github.com/asdfugil/openra1n -b ipad6
     cd openra1n
     curl -L -o Makefile https://github.com/mineek/openra1n/raw/refs/heads/sigcheck/Makefile
-    make 
-    mv openra1n ../bin/openra1n
+    make || true
+    mv openra1n ../bin/openra1n || true
     cd ..
     rm -rf "openra1n"
     # palera1n macOS bin
@@ -375,10 +375,10 @@ elif [[ $dist == 4 ]]; then
     git clone https://github.com/asdfugil/openra1n -b ipad6
     cd openra1n
     curl -L -o Makefile https://github.com/mineek/openra1n/raw/refs/heads/sigcheck/Makefile
-    make OBJCOPY=$(brew --prefix)/opt/binutils/bin/gobjcopy 
-    mv openra1n ../bin/openra1n
+    make OBJCOPY=$(brew --prefix)/opt/binutils/bin/gobjcopy || true
+    mv openra1n ../bin/openra1n || true
     cd ..
-    rm -rf "openra1n"
+    rm -rf "openra1n" 
     # restored patcher for seprmvr64 A8+ restores, my fork of mineek's restored patcher but repurposed
     curl -L -o main.c https://gist.githubusercontent.com/pwnerblu/d2adc5adee74a679704577ddd64508bf/raw/991a74e2bbbdebdb1dd2d49d82f0829e7553f02f/main.c
     gcc main.c -o bin/restoredpatcher
