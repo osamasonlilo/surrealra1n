@@ -1,14 +1,9 @@
 #!/bin/bash
-CURRENT_VERSION="v1.3.27"
-
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+CURRENT_VERSION="v1.4 beta 6"
 
 clear
 
 set -euo pipefail
-
-USE_WIKIPROXY=1
 
 error_handler() {
     local exit_code=$?
@@ -50,7 +45,7 @@ echo "Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1"
 echo ""
 echo "Uses latest SHSH blobs (for tethered downgrades)"
 echo "iSuns9 fork of asr64_patcher is used for patching ASR"
-echo "Huge thanks to bodyc1m (discord username: cashcart1capone) for iPod touch 6 support, including the Arch Linux port they did."
+echo "Huge thanks to bodyc1m for iPod touch 6 support, including the Arch Linux/Fedora port they did."
 echo "Huge thanks to Mineek for openra1n and seprmvr64."
 
 # Request sudo password upfront
@@ -93,6 +88,10 @@ elif [[ -r /etc/os-release ]]; then
         DISTRO="Debian"
         dist=1
         read -n 1 -s -r -p "Press any key to continue"
+    elif [[ "$ID" == "fedora" || "${ID_LIKE:-}" == *fedora* || "${ID_LIKE:-}" == *rhel* ]]; then
+        DISTRO="Fedora"
+        dist=5
+        read -n 1 -s -r -p "Press any key to continue"
     fi
 fi
 
@@ -126,7 +125,7 @@ fi
 # Unsupported check
 if [[ "$DISTRO" == "Unsupported" ]]; then
     echo "Unsupported Linux distribution."
-    echo "This script only supports Debian-based, Arch-based and macOS systems."
+    echo "This script only supports Debian-based, Arch-based, Fedora-based and macOS systems."
     exit 1
 fi
 
@@ -178,9 +177,26 @@ elif [[ $dist == 2 ]]; then
     else
         echo "All dependencies are already installed."
     fi
+elif [[ $dist == 5 ]]; then
+    DEPENDENCIES=(libusb1-devel usbmuxd libimobiledevice-utils zenity git curl make gcc)
+    MISSING_PACKAGES=()
+
+    for pkg in "${DEPENDENCIES[@]}"; do
+        if ! rpm -q "$pkg" &>/dev/null; then
+            MISSING_PACKAGES+=("$pkg")
+        fi
+    done
+
+    if [ ${#MISSING_PACKAGES[@]} -ne 0 ]; then
+        echo "Missing packages detected: ${MISSING_PACKAGES[*]}"
+        echo "Installing missing dependencies..."
+        sudo dnf install -y "${MISSING_PACKAGES[@]}"
+    else
+        echo "All dependencies are already installed."
+    fi
 elif [[ "$DISTRO" == "unknown" ]]; then
     echo "Unsupported Linux distribution."
-    echo "This script only supports Debian-based and Arch-based systems."
+    echo "This script only supports Debian-based, Arch-based, Fedora-based and macOS systems."
     exit 1
 fi
 
@@ -235,7 +251,7 @@ require_dir() {
 
 echo "Checking for updates..."
 rm -rf update/latest.txt
-curl -L -o update/latest.txt https://github.com/pwnerblu/surrealra1n/raw/refs/heads/main/update/latest.txt
+curl -L -o update/latest.txt https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt
 LATEST_VERSION=$(head -n 1 "update/latest.txt" | tr -d '\r\n')
 RELEASE_NOTES=$(awk '/^RELEASE NOTES:/{flag=1; next} flag' "update/latest.txt")
 
@@ -252,12 +268,12 @@ if [[ $LATEST_VERSION != $CURRENT_VERSION ]]; then
         rm -rf futurerestore
         rm -rf "keys"
         rm -rf "manifest"
-        curl -L -o updatefiles/surrealra1n.sh https://github.com/pwnerblu/surrealra1n/raw/refs/heads/main/surrealra1n.sh
+        curl -L -o updatefiles/surrealra1n.sh https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/surrealra1n.sh
         rm -rf surrealra1n.sh
         mv updatefiles/surrealra1n.sh surrealra1n.sh
         chmod +x surrealra1n.sh
         cd updatefiles
-        git clone --branch main https://github.com/pwnerblu/surrealra1n --recursive
+        git clone --branch development https://github.com/pwnerblu/surrealra1n --recursive
         mv surrealra1n/keys keys
         mv surrealra1n/manifest manifest
         cd ..
@@ -268,7 +284,8 @@ if [[ $LATEST_VERSION != $CURRENT_VERSION ]]; then
         exit 1
     else
         echo "You have declined the update."
-        echo "Until you update, surrealra1n support will not be provided. I (pwnerblu) only support the latest version."
+        echo "Until you update, surrealra1n can't be used."
+        exit 1
     fi
 else
     echo "surrealra1n is up to date."
@@ -561,6 +578,17 @@ else
     rm -rf "futurerestore-Linux-x86_64-v2.0.0-Build_329-RELEASE" 
     cd ..
 fi
+
+echo "Checking for SSHRD_Script dependency..."
+if [[ -f "./bin/SSHRD_Script/sshrd.sh" ]]; then
+    echo "Found SSHRD_Script in bin/SSHRD_Script."
+else
+    echo "SSHRD_Script is missing. Installing into bin/SSHRD_Script..."
+    rm -rf "./bin/SSHRD_Script"
+    git clone --recursive https://github.com/verygenericname/SSHRD_Script "./bin/SSHRD_Script"
+    chmod +x "./bin/SSHRD_Script/sshrd.sh" || true
+fi
+
 
 # Run ideviceinfo and capture both output and return code
 IDEVICE_INFO=$(ideviceinfo 2>&1) || true
@@ -982,16 +1010,7 @@ case "$1" in
                     ;;
             esac
         fi
-        if [[ $IDENTIFIER == iPhone6,2 ]] && [[ $IOS_VERSION != 7.* ]]; then
-            echo "iPhone6,2 does not support 8.0-9.3.5 seprmvr64 restores yet in surrealra1n."
-            exit 1
-        elif [[ $IDENTIFIER == iPhone7,2 || $IDENTIFIER == iPhone7,1 ]] && [[ $IOS_VERSION != 8.4.1 ]]; then
-            echo "iPhone 6 (and 6 Plus) does not support any other than 8.4.1 seprmvr64 restores via surrealra1n"
-            exit 1
-        elif [[ $IDENTIFIER == iPad5,3 ]] && [[ $IOS_VERSION != 8.* ]]; then
-            echo "This version is not supported yet in seprmvr64-ipsw"
-            exit 1
-        elif [[ $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 || $IDENTIFIER == iPad5,4 || $IDENTIFIER == iPad4* ]]; then
+        if [[ $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 || $IDENTIFIER == iPad5,4 || $IDENTIFIER == iPad4* ]]; then
             echo "Device is not supported yet for seprmvr64-ipsw"
             exit 1
         fi
@@ -1419,24 +1438,65 @@ case "$1" in
         sudo LD_LIBRARY_PATH="lib" ./bin/idevicerestore -e $savedir/custom.ipsw -y
         echo "Restore has completed! If it's successful, you can boot with: ./surrealra1n.sh --seprmvr64-boot $IOS_VERSION"
         if [[ $IOS_VERSION == 8.* ]]; then
-            echo "We are not done yet. You need to run this command to fix dyld: ./surrealra1n.sh --fix-ios8"
-            echo "Only after fixing dyld can you boot it normally, this is so we don't get stuck at Slide to Upgrade"
+            echo "[*] iOS 8 detected, running automatic dyld fix now..."
+            "$0" --fix-ios8
         fi
         exit 0
         ;;
 
     --fix-ios8)
         echo "[!] IMPORTANT: Your device should be freshly restored to iOS 8.x and never be booted!"
-        echo "[!] Please boot an SSH ramdisk with Legacy iOS Kit first. You can get Legacy iOS Kit from: https://github.com/LukeZGD/Legacy-iOS-Kit"
-        read -p "Press enter to continue after booting the ramdisk"
+        SSHRD_DIR="./bin/SSHRD_Script"
+        SSHRD_SSHPASS="$SSHRD_DIR/$(uname)/sshpass"
+        SSHRD_IPROXY="$SSHRD_DIR/$(uname)/iproxy"
+        if [[ ! -f "$SSHRD_DIR/sshrd.sh" ]]; then
+            echo "[!] SSHRD_Script is missing at $SSHRD_DIR."
+            echo "[!] Re-run surrealra1n so dependency bootstrap can install it."
+            exit 1
+        fi
+        if [[ ! -x "$SSHRD_SSHPASS" || ! -x "$SSHRD_IPROXY" ]]; then
+            echo "[!] SSHRD binaries are missing for $(uname): $SSHRD_SSHPASS / $SSHRD_IPROXY"
+            exit 1
+        fi
+        if [[ ! -f "$SSHRD_DIR/sshramdisk/iBSS.img4" || ! -f "$SSHRD_DIR/sshramdisk/iBEC.img4" || ! -f "$SSHRD_DIR/sshramdisk/ramdisk.img4" || ! -f "$SSHRD_DIR/sshramdisk/devicetree.img4" || ! -f "$SSHRD_DIR/sshramdisk/kernelcache.img4" ]]; then
+            echo "[*] SSHRD ramdisk payload not found, generating with 12.0..."
+            (
+                cd "$SSHRD_DIR" || exit 1
+                chmod +x ./sshrd.sh
+                sudo ./sshrd.sh 12.0
+            ) || exit 1
+        fi
+        echo "[*] Booting SSH ramdisk with SSHRD..."
+        (
+            cd "$SSHRD_DIR" || exit 1
+            chmod +x ./sshrd.sh
+            sudo ./sshrd.sh boot
+        ) || exit 1
+        killall iproxy >/dev/null 2>&1 || true
+        "$SSHRD_IPROXY" 2222 22 >/dev/null 2>&1 &
+        echo "[*] Waiting for SSH ramdisk on 127.0.0.1:2222..."
+        SSH_READY=0
+        for _ in {1..50}; do
+            if "$SSHRD_SSHPASS" -p "alpine" ssh root@127.0.0.1 -p2222 -o ConnectTimeout=2 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "echo ready" >/dev/null 2>&1; then
+                SSH_READY=1
+                break
+            fi
+            sleep 2
+        done
+        if [[ "$SSH_READY" -ne 1 ]]; then
+            echo "[!] SSH ramdisk did not become reachable on port 2222."
+            killall iproxy >/dev/null 2>&1 || true
+            exit 1
+        fi
         echo "This may TAKE up to 15-30 MINUTES to complete! Please be patient during this time."
-        ./bin/sshpass -p "alpine" ssh root@127.0.0.1 -p6414 -o StrictHostKeyChecking=no "/sbin/mount_hfs /dev/disk0s1s1 /mnt1 || true"
-        ./bin/sshpass -p "alpine" scp -P6414 -o StrictHostKeyChecking=no root@localhost:/mnt1/System/Library/Caches/com.apple.dyld/dyld_shared_cache_arm64 dyld.raw
+        "$SSHRD_SSHPASS" -p "alpine" ssh root@127.0.0.1 -p2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "/sbin/mount_hfs /dev/disk0s1s1 /mnt1 || true"
+        "$SSHRD_SSHPASS" -p "alpine" scp -P2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@localhost:/mnt1/System/Library/Caches/com.apple.dyld/dyld_shared_cache_arm64 dyld.raw
         ./bin/dsc64patcher dyld.raw dyld.patched -8
-        ./bin/sshpass -p "alpine" scp -P6414 -o StrictHostKeyChecking=no dyld.patched root@localhost:/mnt1/System/Library/Caches/com.apple.dyld/dyld_shared_cache_arm64
+        "$SSHRD_SSHPASS" -p "alpine" scp -P2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no dyld.patched root@localhost:/mnt1/System/Library/Caches/com.apple.dyld/dyld_shared_cache_arm64
         rm -rf dyld.patched
         rm -rf dyld.raw
-        ./bin/sshpass -p "alpine" ssh root@127.0.0.1 -p6414 -o StrictHostKeyChecking=no "/sbin/reboot || true"
+        "$SSHRD_SSHPASS" -p "alpine" ssh root@127.0.0.1 -p2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "/sbin/reboot || true"
+        killall iproxy >/dev/null 2>&1 || true
         echo "dyld fix is complete. You can now boot iOS 8."
         exit 0
         ;;
@@ -2463,49 +2523,6 @@ case "$1" in
             mkdir tmp/Firmware/all_flash
             mv $SEP tmp/Firmware/all_flash/
             SEP_PATH="tmp/Firmware/all_flash/$SEP"
-            if [[ $IOS_VERSION == 10.3.3 ]]; then
-                BUILD_ID="14G60"
-            elif [[ $IOS_VERSION == 10.3.2 ]]; then
-                BUILD_ID="14F89"
-            elif [[ $IOS_VERSION == 10.3.1 ]]; then
-                BUILD_ID="14E304"
-            elif [[ $IOS_VERSION == 10.3 ]]; then
-                BUILD_ID="14E277"
-            fi
-            # workaround to an issue regarding iBSS and iBEC pwnrestores
-            if [[ $IDENTIFIER == iPhone7,2 ]]; then
-                boardcfg="n61ap"
-            elif [[ $IDENTIFIER == iPhone7,1 ]]; then
-                boardcfg="n56ap"
-            fi
-            KEY_FILE="keys/$IDENTIFIER.txt"
-            if [[ ! -f "$KEY_FILE" ]]; then
-                echo "[!] Key file $KEY_FILE not found. Aborting."
-                exit 1
-            fi
-
-            # Extract iBSS and iBEC keys
-            IBSS_KEY=$(grep "ibss-$IOS_VERSION:" "$KEY_FILE" | cut -d':' -f2 | xargs)
-            IBEC_KEY=$(grep "ibec-$IOS_VERSION:" "$KEY_FILE" | cut -d':' -f2 | xargs)
-            # patch iBSS and iBEC pwnrestore and do restore
-            ./bin/img4tool -s "$shshpath" -e -m "$IDENTIFIER-im4m"
-            im4m="$IDENTIFIER-im4m"
-            if [[ $IDENTIFIER == iPhone7* ]] && [[ $IOS_VERSION == 10.3* ]]; then
-                unzip -j "$restoredir/custom.ipsw" "Firmware/dfu/$IBSS" -d tmp
-                unzip -j "$restoredir/custom.ipsw" "Firmware/dfu/$IBEC" -d tmp
-                ./bin/img4 -i tmp/$IBSS -o tmp/iBSS.raw -k $IBSS_KEY
-                ./bin/img4 -i tmp/$IBEC -o tmp/iBEC.raw -k $IBEC_KEY
-                ./bin/iBoot64Patcher tmp/iBSS.raw tmp/iBSS.patch
-                ./bin/iBoot64Patcher tmp/iBEC.raw tmp/iBEC.patch -b "rd=md0 debug=0x2014e -v wdt=-1 nand-enable-reformat=1 -restore amfi=0xff cs_enforcement_disable=1" -n
-                sudo mkdir -p /tmp/futurerestore
-                sudo ./bin/img4 -i tmp/iBSS.patch -o /tmp/futurerestore/ibss.$boardcfg.$BUILD_ID.patched.img4 -A -T ibss -M $im4m
-                sudo ./bin/img4 -i tmp/iBEC.patch -o /tmp/futurerestore/ibec.$boardcfg.$BUILD_ID.patched.img4 -A -T ibec -M $im4m
-                sleep 3
-                sudo FUTURERESTORE_I_SOLEMNLY_SWEAR_THAT_I_AM_UP_TO_NO_GOOD=1 ./futurerestore/futurerestore -t $shshpath --skip-blob --use-pwndfu --rdsk $restoredir/ramdisk.im4p --rkrn $restoredir/kernel.im4p $USE_BASEBAND --sep "$SEP_PATH" --sep-manifest "$mnifst" --no-rsep $restoredir/custom.ipsw
-                echo "Restore has finished! Read above if there's any errors"
-                rm -rf "tmp" 
-                exit 0          
-            fi
             if [[ $IOS_VERSION == 11.0* || $IOS_VERSION == 11.1* || $IOS_VERSION == 11.2* ]]; then
                 if [[ $update_prompt == y || $update_prompt == Y ]]; then
                     sudo FUTURERESTORE_I_SOLEMNLY_SWEAR_THAT_I_AM_UP_TO_NO_GOOD=1 ./futurerestore/futurerestore -t $shshpath --skip-blob --use-pwndfu --no-cache --rdsk $restoredir/updateramdisk.im4p --rkrn $restoredir/kernel.im4p $USE_BASEBAND --sep "$SEP_PATH" --sep-manifest "$mnifst" --no-rsep $restoredir/custom.ipsw
@@ -2544,7 +2561,8 @@ case "$1" in
             sudo rm -rf "boot/$IDENTIFIER/$IOS_VERSION"
         fi
         exit 1
-        ;;  
+        ;;
+# deprecate ota downgrade option
     --downgrade)
         if [[ $# -ne 3 ]]; then
             echo "[!] Usage: --downgrade [IPSW FILE] [SHSH BLOB]"
@@ -2581,25 +2599,87 @@ case "$1" in
 
         echo "[*] Using SHSH blob: $SHSHBLOB"
         echo "running futurerestore"
+        sudo rm -rf "tmp" 
         if [[ $vers == 11.3* || $vers == 11.4* || $vers == 12.* || $vers == 13.* || $vers == 14.* || $vers == 15.* || $vers == 16.* ]]; then
-           echo "Using latest SEP and baseband!"
-           sudo ./futurerestore/futurerestore -t $SHSHBLOB --use-pwndfu $USE_BASEBAND --latest-sep --no-rsep $IPSW
+            echo "Using latest SEP and baseband!"
+            sudo ./futurerestore/futurerestore -t $SHSHBLOB --use-pwndfu $USE_BASEBAND --latest-sep --no-rsep $IPSW
         elif [[ $IDENTIFIER == iPhone6* ]] && [[ $vers == 10.1* || $vers == 10.2* || $vers == 10.3* ]]; then
-           echo "iOS 10 SEP needs to be used"
-           IPSW_PATH=$($zenity --file-selection --title="Select the iOS 10.3.3 IPSW file (for SEP firmware)")
-           mkdir tmp
-           mkdir tmp/Firmware
-           mkdir tmp/Firmware/all_flash
-           unzip -j "$IPSW_PATH" "Firmware/all_flash/$SEP" -d tmp/Firmware/all_flash
-           unzip -j "$IPSW_PATH" "Firmware/$BASEBAND10" -d tmp/Firmware
-           SEP_PATH="tmp/Firmware/all_flash/$SEP"
-           BASEBAND_PATH="tmp/Firmware/$BASEBAND10"
-           sudo FUTURERESTORE_I_SOLEMNLY_SWEAR_THAT_I_AM_UP_TO_NO_GOOD=1 ./futurerestore/futurerestore -t $SHSHBLOB --use-pwndfu --no-cache --baseband "$BASEBAND_PATH" --baseband-manifest "$mnifst" --sep "$SEP_PATH" --sep-manifest "$mnifst" --no-rsep $IPSW
+            echo "iOS 10 SEP needs to be used"
+            IPSW_PATH=$($zenity --file-selection --title="Select the iOS 10.3.3 IPSW file (for SEP firmware)")
+            mkdir tmp
+            mkdir tmp/Firmware
+            mkdir tmp/Firmware/all_flash
+            unzip -j "$IPSW_PATH" "Firmware/all_flash/$SEP" -d tmp/Firmware/all_flash
+            unzip -j "$IPSW_PATH" "Firmware/$BASEBAND10" -d tmp/Firmware
+            SEP_PATH="tmp/Firmware/all_flash/$SEP"
+            BASEBAND_PATH="tmp/Firmware/$BASEBAND10"
+            sudo FUTURERESTORE_I_SOLEMNLY_SWEAR_THAT_I_AM_UP_TO_NO_GOOD=1 ./futurerestore/futurerestore -t $SHSHBLOB --use-pwndfu --no-cache --baseband "$BASEBAND_PATH" --baseband-manifest "$mnifst" --sep "$SEP_PATH" --sep-manifest "$mnifst" --no-rsep $IPSW
+        elif [[ $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 || $IDENTIFIER == iPod7* ]] && [[ $vers == 10.1* || $vers == 10.2* || $vers == 10.3* ]]; then
+            # untether downgrade iPhone 6/6 Plus/mini 4/iPod touch 6 with blobs to 10.x, tvOS SEP hax
+            echo "tvOS 10.2.2 SEP needs to be used"
+            if [[ $IDENTIFIER == iPod7* ]]; then
+                # download tvOS SEP
+                SEP="sep-firmware.j42d.RELEASE.im4p"
+                sudo ./bin/pzb -g Firmware/all_flash/$SEP https://secure-appldnld.apple.com/tvos10.2.2/091-23452-20170720-5D53229C-6A56-11E7-8577-8B2C4A4DD6D5/AppleTV5,3_10.2.2_14W756_Restore.ipsw
+                mnifst="manifest/BuildManifest-iPod7,1.plist" # slightly modified BuildManifest from tvOS 10.2.2 to hack signed SEP for 10.3.x restores A8
+            fi
+            if [[ $IDENTIFIER == iPhone7,2 ]]; then
+                SEP="sep-firmware.j42d.RELEASE.im4p"
+                sudo ./bin/pzb -g Firmware/all_flash/$SEP https://secure-appldnld.apple.com/tvos10.2.2/091-23452-20170720-5D53229C-6A56-11E7-8577-8B2C4A4DD6D5/AppleTV5,3_10.2.2_14W756_Restore.ipsw
+                mnifst="manifest/BuildManifest-iPhone7,2.plist"
+                curl -L -o $mnifst https://github.com/pwnerblu/cursed-sep-resources/raw/refs/heads/main/BuildManifest-iPhone7,2.plist
+            fi
+            if [[ $IDENTIFIER == iPhone7,1 ]]; then
+                SEP="sep-firmware.j42d.RELEASE.im4p"
+                sudo ./bin/pzb -g Firmware/all_flash/$SEP https://secure-appldnld.apple.com/tvos10.2.2/091-23452-20170720-5D53229C-6A56-11E7-8577-8B2C4A4DD6D5/AppleTV5,3_10.2.2_14W756_Restore.ipsw
+                mnifst="manifest/BuildManifest-iPhone7,1.plist"
+                curl -L -o $mnifst https://github.com/pwnerblu/cursed-sep-resources/raw/refs/heads/main/BuildManifest-iPhone7,1.plist
+            fi
+            if [[ $IDENTIFIER == iPad5,1 ]]; then
+                SEP="sep-firmware.j42d.RELEASE.im4p"
+                sudo ./bin/pzb -g Firmware/all_flash/$SEP https://secure-appldnld.apple.com/tvos10.2.2/091-23452-20170720-5D53229C-6A56-11E7-8577-8B2C4A4DD6D5/AppleTV5,3_10.2.2_14W756_Restore.ipsw
+                mnifst="manifest/BuildManifest-iPad5,1.plist"
+                curl -L -o $mnifst https://github.com/pwnerblu/cursed-sep-resources/raw/refs/heads/main/BuildManifest-iPad5,1.plist
+            fi
+            if [[ $IDENTIFIER == iPad5,2 ]]; then
+                SEP="sep-firmware.j42d.RELEASE.im4p"
+                sudo ./bin/pzb -g Firmware/all_flash/$SEP https://secure-appldnld.apple.com/tvos10.2.2/091-23452-20170720-5D53229C-6A56-11E7-8577-8B2C4A4DD6D5/AppleTV5,3_10.2.2_14W756_Restore.ipsw
+                mnifst="manifest/BuildManifest-iPad5,2.plist"
+                curl -L -o $mnifst https://github.com/pwnerblu/cursed-sep-resources/raw/refs/heads/main/BuildManifest-iPad5,2.plist
+            fi
+            mkdir tmp
+            mkdir tmp/Firmware
+            mkdir tmp/Firmware/all_flash
+            mv $SEP tmp/Firmware/all_flash/
+            SEP_PATH="tmp/Firmware/all_flash/$SEP"
+            # patch restore kernel if not on iPod touch 6, otherwise proceed without rkrn patching
+            if [[ $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5* ]]; then
+                unzip -j "$IPSW" "$KERNELCACHE" -d tmp
+                ./bin/img4 -i tmp/$KERNELCACHE -o tmp/kernel.raw 
+                ./bin/Kernel64Patcher2 tmp/kernel.raw tmp/kernel.patch -u 11 --skip-sks --skip-acm --skip-amfi
+                ./bin/kerneldiff tmp/kernel.raw tmp/kernel.patch tmp/kernel.diff 
+                ./bin/img4 -i tmp/$KERNELCACHE -o tmp/kernel.im4p -T rkrn -P tmp/kernel.diff -J || true 
+                sudo FUTURERESTORE_I_SOLEMNLY_SWEAR_THAT_I_AM_UP_TO_NO_GOOD=1 ./futurerestore/futurerestore -t $SHSHBLOB --use-pwndfu --no-cache $USE_BASEBAND --sep "$SEP_PATH" --sep-manifest "$mnifst" --no-rsep $IPSW --rkrn tmp/kernel.im4p
+            else
+                sudo FUTURERESTORE_I_SOLEMNLY_SWEAR_THAT_I_AM_UP_TO_NO_GOOD=1 ./futurerestore/futurerestore -t $SHSHBLOB --use-pwndfu --no-cache $USE_BASEBAND --sep "$SEP_PATH" --sep-manifest "$mnifst" --no-rsep $IPSW
+            fi
         else
-           echo "SEP is incompatible!"
-           exit 1
+            echo "SEP is incompatible!"
+            exit 1
         fi
         echo "Restore has finished! Read above if there's any errors"
+        if [[ $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 || $IDENTIFIER == iPhone7* ]]; then
+            echo "You will have the following issues:"
+            echo "1. Touch ID will not work"
+            echo "2. Device may hang for a certain amount of time at certain parts of setup screen."
+            echo "3. Device may take 3-5 minutes to boot untethered"
+            echo "All of the issues, except Touch ID, can be mitigated if you boot tethered with surrealra1n."
+            echo "It is recommended to briefly boot tethered, so you can set up the device normally, then you can reboot untethered"
+            echo "surrealra1n tethered boot command: ./surrealra1n.sh --boot $vers"
+            sudo rm -rf "shsh"
+            mkdir shsh
+            cp $SHSHBLOB shsh/something.shsh2 # so tether boot can work
+        fi
         echo "Removing tmp folder if it exists"
         sudo rm -rf "tmp"
         exit 1
